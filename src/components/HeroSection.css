@@ -1,0 +1,699 @@
+.hero {
+  background: #fff;
+  padding: 24px 0 32px;
+}
+
+.hero__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.hero__sidebar {
+  padding-top: 8px;
+}
+
+.sidebar__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sidebar__list {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.sidebar__item {
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: color 0.2s;
+}
+
+.sidebar__link:hover {
+  color: var(--teal);
+}
+
+.sidebar__icon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.sidebar__label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.sidebar__count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.sidebar__view-all {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  transition: all 0.2s;
+}
+
+.sidebar__view-all:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.sidebar__verify-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.verify-card__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.verify-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.verify-card__sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ── Hero Main ── */
+.hero__main {
+  background: linear-gradient(145deg, #f0f9ff 0%, #e8f5f3 100%);
+  border-radius: 16px;
+  padding: 40px 44px 44px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #dbeafe;
+}
+
+.hero__badge {
+  display: inline-flex;
+  margin-bottom: 20px;
+}
+
+.hero__badge span {
+  background: rgba(0, 191, 174, 0.12);
+  color: var(--teal-mid);
+  border: 1px solid rgba(0, 191, 174, 0.3);
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hero__title {
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--navy);
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.title-accent {
+  color: var(--teal);
+}
+
+.title-teal {
+  color: var(--teal);
+  display: block;
+}
+
+.hero__subtext {
+  font-size: 16px;
+  color: #4b5563;
+  line-height: 1.65;
+  max-width: 480px;
+  margin-bottom: 32px;
+  flex: 1;
+}
+
+.hero__buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+  font-family: var(--font);
+}
+
+.btn--primary {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+
+.btn--primary:hover {
+  background: #162d52;
+  border-color: #162d52;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+.btn--outline:hover {
+  background: var(--navy);
+  color: white;
+}
+
+/* ── Promo Card ── */
+.hero__promo {
+  position: relative;
+}
+
+.promo-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: #6b7280;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.promo-nav:hover {
+  background: var(--teal);
+  color: white;
+  border-color: var(--teal);
+}
+
+.promo-nav--left {
+  left: -18px;
+}
+
+.promo-nav--right {
+  right: -18px;
+}
+
+.promo-card {
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.2;
+}
+
+.promo-card__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.promo-card__discount {
+  display: inline-flex;
+  background: var(--teal);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.promo-card__title {
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.promo-card__desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.55;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.promo-card__benefits {
+  list-style: none;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promo-card__benefits li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.promo-card__cta {
+  display: block;
+  background: white;
+  color: var(--navy);
+  text-align: center;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  margin-top: auto;
+}
+
+.promo-card__cta:hover {
+  background: #f0f9ff;
+}
+
+.promo-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.promo-dot {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.promo-dot.active {
+  background: var(--navy);
+  width: 32px;
+}
+
+@media (max-width: 1100px) {
+  .hero__inner {
+    grid-template-columns: 220px 1fr 260px;
+  }
+  .hero__title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero__inner {
+    grid-template-columns: 1fr;
+  }
+  .hero__sidebar {
+    display: none;
+  }
+  .promo-nav--left {
+    left: 8px;
+  }
+  .promo-nav--right {
+    right: 8px;
+  }
+}
+
+/* ─── Mount entrance animations ─────────────────────────────────────────── */
+
+/* Base: elements start invisible; .hero--mounted triggers them */
+.hero-anim {
+  opacity: 0;
+}
+
+.hero--mounted .hero-anim {
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 0.55s;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Badge — pops in with a scale bounce */
+.hero--mounted .hero-anim--badge {
+  animation-name: anim-badge;
+}
+@keyframes anim-badge {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Title — slides up */
+.hero--mounted .hero-anim--title {
+  animation-name: anim-slide-up;
+}
+@keyframes anim-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Generic fade-up (subtext, buttons, view-all, verify card) */
+.hero--mounted .hero-anim--fade {
+  animation-name: anim-fade-up;
+}
+@keyframes anim-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sidebar items — slide in from left */
+.hero--mounted .hero-anim--sidebar {
+  animation-name: anim-slide-left;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes anim-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Promo card panel — slides in from right */
+.hero--mounted .hero-anim--promo {
+  animation-name: anim-slide-right;
+}
+@keyframes anim-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Promo slider transitions ───────────────────────────────────────────── */
+
+.promo-track {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Floating pulse on the active card */
+.promo-card--float {
+  animation: promo-float 4s ease-in-out infinite;
+}
+@keyframes promo-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Slide-in from the right (next) */
+.promo-card--enter-next {
+  animation: enter-from-right 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes enter-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Slide-in from the left (prev) */
+.promo-card--enter-prev {
+  animation: enter-from-left 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes enter-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Exit to left (next direction) */
+.promo-card--exit-next {
+  position: absolute;
+  inset: 0;
+  animation: exit-to-left 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+@keyframes exit-to-left {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.97);
+  }
+}
+
+/* Exit to right (prev direction) */
+.promo-card--exit-prev {
+  position: absolute;
+  inset: 0;
+  animation: exit-to-right 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+@keyframes exit-to-right {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px) scale(0.97);
+  }
+}
+
+/* Benefit list items stagger in when card enters */
+.promo-card--enter-next .promo-card__benefits li,
+.promo-card--enter-prev .promo-card__benefits li {
+  animation: benefit-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.18s + var(--benefit-delay, 0s));
+}
+@keyframes benefit-pop {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Promo dot animation ─────────────────────────────────────────────────── */
+
+.promo-dot {
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.25s ease,
+    width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.promo-dot.active {
+  animation: dot-activate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes dot-activate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ─── Verification card shimmer ──────────────────────────────────────────── */
+
+.verify-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.verify-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+/* ─── Sidebar link hover micro-interaction ───────────────────────────────── */
+
+.sidebar__link {
+  transition:
+    padding-left 0.2s ease,
+    background 0.2s ease;
+}
+.sidebar__link:hover {
+  padding-left: 4px; /* subtle nudge right on hover */
+}
+
+.sidebar__icon {
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s ease;
+}
+.sidebar__link:hover .sidebar__icon {
+  transform: scale(1.25) rotate(-8deg);
+}
+
+.sidebar__count {
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+.sidebar__link:hover .sidebar__count {
+  transform: scale(1.1);
+}
+
+/* ─── Primary CTA ripple ─────────────────────────────────────────────────── */
+
+.btn--ripple {
+  position: relative;
+  overflow: hidden;
+}
+.btn--ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateX(-100%) skewX(-15deg);
+  transition: transform 0s;
+}
+.btn--ripple:hover::after {
+  transform: translateX(110%) skewX(-15deg);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── Promo nav button hover ─────────────────────────────────────────────── */
+
+.promo-nav {
+  transition:
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+.promo-nav:hover {
+  transform: scale(1.15);
+}
+.promo-nav:active {
+  transform: scale(0.92);
+}

@@ -1,0 +1,199 @@
+.promo-slider {
+  padding: 20px 0 8px;
+  background: #fff;
+}
+
+.promo-slider__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Card shell ── */
+.promo-slider__card {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* exact 50 / 50 split */
+  overflow: hidden;
+  min-height: 260px; /* fixed card height so image can't enlarge it */
+}
+
+/* container that holds stacked cards for cross-fade */
+.promo-slider__cards {
+  position: relative;
+  height: 260px; /* must match .promo-slider__card height */
+}
+
+/* stacked cards; only the active one is visible via opacity */
+.promo-slider__card {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  transition:
+    opacity 0.6s ease-in-out,
+    transform 0.6s ease-in-out;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+}
+.promo-slider__card.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Left text half ── */
+.promo-slider__text {
+  padding: 32px 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  background: #fff;
+}
+
+.promo-slider__badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.badge-grey {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+}
+
+.badge-teal {
+  background: #4cc9ca;
+  color: #ffffff;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+}
+
+.promo-slider__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1d3a85;
+  margin-bottom: 12px;
+  line-height: 1.2;
+  font-family: "Inter", sans-serif;
+}
+
+.promo-slider__desc {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.65;
+  margin-bottom: 24px;
+  max-width: 400px;
+  font-family: "Inter", sans-serif;
+}
+
+.promo-slider__cta {
+  display: inline-block;
+  background: #1d3a85;
+  color: #ffffff;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  width: fit-content;
+  text-decoration: none;
+  font-family: "Inter", sans-serif;
+  transition: background 0.2s;
+}
+
+.promo-slider__cta:hover {
+  background: #162d6e;
+}
+
+/* ── Right image half ── */
+.promo-slider__image {
+  position: relative;
+  overflow: hidden;
+  background: #1a1a2e;
+  min-height: 260px;
+  height: 100%; /* fill the right half of each card */
+}
+
+.promo-slider__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  max-width: none; /* prevent images from shrinking/expanding layout */
+}
+
+.promo-slider__img-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1d3a85 0%, #2e8fa0 100%);
+}
+
+/* Discount badge overlaid on top-right of image */
+.promo-slider__corner-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #4cc9ca;
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  letter-spacing: 0.2px;
+}
+
+/* ── Dot indicators ── */
+.promo-slider__dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.promo-slider__dot {
+  width: 26px;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.promo-slider__dot.active {
+  background: #1d3a85;
+  width: 34px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .promo-slider__card {
+    grid-template-columns: 1fr;
+    position: absolute;
+    inset: 0;
+  }
+  .promo-slider__cards {
+    height: 200px;
+  }
+  .promo-slider__image {
+    height: 100%;
+    min-height: 200px;
+  }
+  .promo-slider__text {
+    padding: 24px 20px;
+  }
+}

@@ -1,0 +1,121 @@
+.special-banner {
+  padding: 8px 0 32px;
+  background: #fff;
+}
+
+.special-banner__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.special-banner__card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: linear-gradient(135deg, #f0fdf9 0%, #e8f8f5 100%);
+  border: 1.5px solid #c6f0e8;
+  border-radius: 14px;
+  padding: 22px 28px;
+}
+
+.special-banner__left {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  flex: 1;
+}
+
+.special-banner__icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 191, 174, 0.12);
+  border: 1.5px solid rgba(0, 191, 174, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.special-banner__info {
+  flex: 1;
+}
+
+.special-banner__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.special-banner__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.special-banner__badge {
+  background: var(--navy);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.special-banner__desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.special-banner__pricing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.special-banner__pricing-label {
+  background: rgba(0, 191, 174, 0.12);
+  color: var(--teal-mid);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+.special-banner__pricing-text {
+  color: #374151;
+  font-size: 13px;
+}
+
+.special-banner__pricing-text strong {
+  color: var(--teal-mid);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.special-banner__cta {
+  background: var(--navy);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.special-banner__cta:hover {
+  background: #162d52;
+}
+
+@media (max-width: 768px) {
+  .special-banner__card { flex-direction: column; align-items: flex-start; }
+}
