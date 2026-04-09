@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import CategoryBar from "./components/CategoryBar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
+import CategoryProductsPage from "./pages/CategoryProductsPage";
+import AllProductsPage from "./pages/AllProductsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 
@@ -58,17 +60,14 @@ function App() {
       <Layout settings={resolvedSettings}>
         <Routes>
           <Route path="/" element={<HomePage settings={resolvedSettings} />} />
-          <Route
-            path="/products"
-            element={<PlaceholderPage title="All Services" />}
-          />
+          <Route path="/products" element={<AllProductsPage />} />
           <Route
             path="/product/:id"
             element={<PlaceholderPage title="Product Detail" />}
           />
           <Route
-            path="/category/:slug"
-            element={<PlaceholderPage title="Category" />}
+            path="/category/:categoryId/all"
+            element={<CategoryProductsPage />}
           />
           <Route
             path="/categories"

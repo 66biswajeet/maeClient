@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Shield, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "./HeroSection.css";
 import axios from "axios";
 
@@ -56,6 +57,7 @@ const HeroSection = ({ hero, heroScenePromos = [] }) => {
   const [promoIndex, setPromoIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [apiCats, setApiCats] = useState([]);
+  const navigate = useNavigate();
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
   useEffect(() => {
@@ -86,9 +88,9 @@ const HeroSection = ({ hero, heroScenePromos = [] }) => {
       : hero?.categoryLinks?.length
         ? hero.categoryLinks
         : DEFAULT_CATEGORY_LINKS;
-  const promos = heroScenePromos?.length ? heroScenePromos : DEFAULT_PROMOS;
-  const activePromo = promos[promoIndex];
 
+  const promos = heroScenePromos?.length ? heroScenePromos : DEFAULT_PROMOS;
+  const activePromo = promos[promoIndex] || promos[0];
   const prevPromo = () =>
     setPromoIndex((i) => (i - 1 + promos.length) % promos.length);
   const nextPromo = () => setPromoIndex((i) => (i + 1) % promos.length);
@@ -105,29 +107,46 @@ const HeroSection = ({ hero, heroScenePromos = [] }) => {
             {hero?.categoryTitle || "FRAMEWORKS"}
           </h4>
           <ul className="sidebar__list">
-            {categoryLinks.map((link, i) => (
-              <li
-                key={link._id || i}
-                className="sidebar__item hero-anim hero-anim--sidebar"
-                style={{ "--delay": `${0.06 + i * 0.06}s` }}
-              >
-                <a
-                  href={`/category/${link.slug || ""}`}
-                  className="sidebar__link"
+            {categoryLinks.map((link, i) => {
+              const toId =
+                link._id ||
+                link.slug ||
+                (link.label || "")
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")
+                  .replace(/[^\w-]/g, "");
+              return (
+                <li
+                  key={link._id || i}
+                  className="sidebar__item hero-anim hero-anim--sidebar"
+                  style={{ "--delay": `${0.06 + i * 0.06}s` }}
                 >
-                  <Shield size={14} className="sidebar__icon" />
-                  <span className="sidebar__label">{link.label}</span>
-                  <span className="sidebar__count">{link.count}</span>
-                </a>
-              </li>
-            ))}
+                  <a
+                    href={`/category/${toId}/all`}
+                    className="sidebar__link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/category/${toId}/all`);
+                    }}
+                  >
+                    <Shield size={14} className="sidebar__icon" />
+                    <span className="sidebar__label">{link.label}</span>
+                    <span className="sidebar__count">{link.count}</span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
           <a
-            href={hero?.viewAllLink || "/categories"}
+            href="/products"
             className="sidebar__view-all hero-anim hero-anim--fade"
             style={{ "--delay": "0.6s" }}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/products");
+            }}
           >
-            VIEW ALL
+            VIEW ALL SERVICES
           </a>
 
           {/* Verification card */}
