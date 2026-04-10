@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import CategoryBar from "./components/CategoryBar";
@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import CategoryProductsPage from "./pages/CategoryProductsPage";
 import AllProductsPage from "./pages/AllProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 
@@ -20,6 +21,33 @@ const Layout = ({ children, settings }) => (
 
 function App() {
   const { settings, loading } = useSiteSettings();
+
+  // Update favicon and meta tags when settings load
+  useEffect(() => {
+    if (settings?.header?.faviconUrl) {
+      // Update favicon
+      const faviconElement = document.getElementById("favicon");
+      if (faviconElement) {
+        faviconElement.href = settings.header.faviconUrl;
+      }
+
+      // Also update og:image if available
+      const ogImageElement = document.getElementById("og-image");
+      if (ogImageElement) {
+        ogImageElement.content = settings.header.faviconUrl;
+      }
+    }
+
+    // Update page title
+    if (settings?.header?.siteTitle) {
+      document.title = settings.header.siteTitle;
+
+      const ogTitleElement = document.getElementById("og-title");
+      if (ogTitleElement) {
+        ogTitleElement.content = settings.header.siteTitle;
+      }
+    }
+  }, [settings]);
 
   if (loading) {
     return (
@@ -61,10 +89,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage settings={resolvedSettings} />} />
           <Route path="/products" element={<AllProductsPage />} />
-          <Route
-            path="/product/:id"
-            element={<PlaceholderPage title="Product Detail" />}
-          />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route
             path="/category/:categoryId/all"
             element={<CategoryProductsPage />}

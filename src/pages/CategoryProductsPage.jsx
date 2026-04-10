@@ -598,6 +598,7 @@ export default function CategoryProductsPage() {
 
   // Filter states
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [priceSlider, setPriceSlider] = useState({ min: 0, max: 100000 });
   const [selectedSubcategories, setSelectedSubcategories] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [selectedPlans, setSelectedPlans] = useState([]);
@@ -1002,14 +1003,55 @@ export default function CategoryProductsPage() {
             </button>
             {isPriceOpen && (
               <div className="filter-section-content">
+                {/* Price Slider */}
+                <div className="price-slider-container">
+                  <div className="slider-track">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100000"
+                      value={priceSlider.min}
+                      onChange={(e) => {
+                        const newMin = Number(e.target.value);
+                        if (newMin <= priceSlider.max) {
+                          setPriceSlider({ ...priceSlider, min: newMin });
+                          setPriceRange({ ...priceRange, min: newMin });
+                        }
+                      }}
+                      className="slider-input slider-input-min"
+                    />
+                    <input
+                      type="range"
+                      min="0"
+                      max="100000"
+                      value={priceSlider.max}
+                      onChange={(e) => {
+                        const newMax = Number(e.target.value);
+                        if (newMax >= priceSlider.min) {
+                          setPriceSlider({ ...priceSlider, max: newMax });
+                          setPriceRange({ ...priceRange, max: newMax });
+                        }
+                      }}
+                      className="slider-input slider-input-max"
+                    />
+                  </div>
+                  <div className="slider-labels">
+                    <span className="slider-label-min">₹0</span>
+                    <span className="slider-label-max">₹1,00,000</span>
+                  </div>
+                </div>
+
+                {/* Price Input Fields */}
                 <div className="price-inputs-sidebar">
                   <input
                     type="number"
                     placeholder="Min"
                     value={priceRange.min}
-                    onChange={(e) =>
-                      setPriceRange({ ...priceRange, min: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 0;
+                      setPriceRange({ ...priceRange, min: val });
+                      setPriceSlider({ ...priceSlider, min: val });
+                    }}
                     className="price-input-sidebar"
                   />
                   <span className="price-separator-sidebar">to</span>
@@ -1017,9 +1059,11 @@ export default function CategoryProductsPage() {
                     type="number"
                     placeholder="Max"
                     value={priceRange.max}
-                    onChange={(e) =>
-                      setPriceRange({ ...priceRange, max: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 100000;
+                      setPriceRange({ ...priceRange, max: val });
+                      setPriceSlider({ ...priceSlider, max: val });
+                    }}
                     className="price-input-sidebar"
                   />
                 </div>
@@ -1188,6 +1232,12 @@ export default function CategoryProductsPage() {
                     key={product._id}
                     product={product}
                     viewMode={viewMode}
+                    selectedCity={
+                      selectedCities.length > 0 ? selectedCities[0] : null
+                    }
+                    selectedPlan={
+                      selectedPlans.length > 0 ? selectedPlans[0] : null
+                    }
                   />
                 ))}
               </div>

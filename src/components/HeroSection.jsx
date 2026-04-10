@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Shield, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useRootCategories } from "../hooks/useRootCategories";
 import "./HeroSection.css";
-import axios from "axios";
 
 const DEFAULT_CATEGORY_LINKS = [
   { label: "DPDP Compliance", count: 6 },
@@ -56,24 +56,15 @@ const DEFAULT_PROMOS = [
 const HeroSection = ({ hero, heroScenePromos = [] }) => {
   const [promoIndex, setPromoIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [apiCats, setApiCats] = useState([]);
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
+  // Use the caching hook to fetch categories only once globally
+  const { categories: apiCats } = useRootCategories();
 
   useEffect(() => {
     // trigger mount animations shortly after render
     const t = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get(`${API_BASE}/categories?isActive=true&parent=root`)
-      .then((res) => {
-        if (Array.isArray(res.data) && res.data.length > 0)
-          setApiCats(res.data);
-      })
-      .catch(() => {});
   }, []);
 
   // if API returned categories use them, otherwise use hero prop or defaults
@@ -83,7 +74,7 @@ const HeroSection = ({ hero, heroScenePromos = [] }) => {
           _id: c._id,
           label: c.name,
           slug: c.slug || "",
-          count: c.subCount || 0,
+          count: c.productCount || 0,
         }))
       : hero?.categoryLinks?.length
         ? hero.categoryLinks

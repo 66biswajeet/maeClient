@@ -172,10 +172,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ChevronDown } from "lucide-react";
-import axios from "axios";
+import { useRootCategories } from "../hooks/useRootCategories";
 import "./CategoryBar.css";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 const DEFAULT_CATEGORIES = [
   "DPDP",
@@ -191,50 +189,29 @@ const DEFAULT_CATEGORIES = [
 const CategoryBar = ({ categoryLinks = [] }) => {
   const navigate = useNavigate();
   const [active, setActive] = useState(null);
-  const [apiCats, setApiCats] = useState([]);
   const [categories, setCategories] = useState([]);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [subcategoriesMap, setSubcategoriesMap] = useState({});
   const scrollRef = useRef(null);
   const itemRefs = useRef({});
   const dropdownRefs = useRef({});
   const hoverTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    // Fetch active root categories from the API
-    axios
-      .get(`${API_BASE}/categories?isActive=true&parent=root`)
-      .then((res) => {
-        const cats = res.data.categories || res.data || [];
-        setApiCats(cats);
-        setCategories(cats);
+  // Use the caching hook to fetch categories only once globally
+  const {
+    categories: cachedCategories,
+    subcategoriesMap,
+    loading,
+  } = useRootCategories();
 
-        // Fetch subcategories for each parent category
-        cats.forEach((cat) => {
-          axios
-            .get(`${API_BASE}/categories?parent=${cat._id}`)
-            .then((subRes) => {
-              const subs = subRes.data.categories || subRes.data || [];
-              setSubcategoriesMap((prev) => ({
-                ...prev,
-                [cat._id]: subs,
-              }));
-            })
-            .catch(() => {
-              setSubcategoriesMap((prev) => ({
-                ...prev,
-                [cat._id]: [],
-              }));
-            });
-        });
-      })
-      .catch(() => {
-        // Fall back to categoryLinks or defaults
-        const fallback =
-          categoryLinks.length > 0 ? categoryLinks : DEFAULT_CATEGORIES;
-        setCategories(fallback);
-      });
-  }, [categoryLinks]);
+  useEffect(() => {
+    if (cachedCategories.length > 0) {
+      setCategories(cachedCategories);
+    } else if (categoryLinks.length > 0) {
+      setCategories(categoryLinks);
+    } else {
+      setCategories(DEFAULT_CATEGORIES);
+    }
+  }, [cachedCategories, categoryLinks]);
 
   // Use categories state, priority: API categories → prop categoryLinks → hard-coded defaults
   const labels =

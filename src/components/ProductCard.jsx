@@ -2,7 +2,28 @@ import React from "react";
 import { MdStar, MdStarBorder } from "react-icons/md";
 import "./ProductCard.css";
 
-const ProductCard = ({ product, loading, viewMode = "grid" }) => {
+const ProductCard = ({
+  product,
+  loading,
+  viewMode = "grid",
+  selectedCity = null,
+  selectedPlan = null,
+}) => {
+  // Build product URL with filter parameters if available
+  const buildProductUrl = () => {
+    let url = `/product/${product?._id}`;
+    const params = new URLSearchParams();
+
+    if (selectedCity) {
+      params.append("city", selectedCity);
+    }
+    if (selectedPlan) {
+      params.append("plan", selectedPlan);
+    }
+
+    const queryString = params.toString();
+    return queryString ? `${url}?${queryString}` : url;
+  };
   if (loading) {
     return (
       <div className="product-card product-card--skeleton">
@@ -86,7 +107,7 @@ const ProductCard = ({ product, loading, viewMode = "grid" }) => {
                 0,
             ).toLocaleString("en-IN")}
           </p>
-          <a href={`/product/${product?._id}`} className="product-card__btn">
+          <a href={buildProductUrl()} className="product-card__btn">
             SELECT OPTIONS
           </a>
         </div>
@@ -182,7 +203,7 @@ const ProductCard = ({ product, loading, viewMode = "grid" }) => {
           ).toLocaleString("en-IN")}
         </p>
         <span className="product-card__fee-label">FIXED FEE</span>
-        <a href={`/product/${product?._id}`} className="product-card__btn">
+        <a href={buildProductUrl()} className="product-card__btn">
           CONFIGURE SERVICE
         </a>
       </div>
