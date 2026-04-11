@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import MobileBottomNav from "./components/MobileBottomNav";
 import CategoryBar from "./components/CategoryBar";
 import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
@@ -15,6 +16,7 @@ const Layout = ({ children, settings }) => (
     <Navbar header={settings?.header} />
     <CategoryBar categoryLinks={settings?.hero?.categoryLinks} />
     {children}
+    <MobileBottomNav />
     <Footer footer={settings?.footer} header={settings?.header} />
   </>
 );

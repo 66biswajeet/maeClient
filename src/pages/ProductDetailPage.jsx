@@ -289,7 +289,10 @@ const ProductDetailPage = () => {
               <h2 className="product-detail__section-title">
                 Full Service Description
               </h2>
-              <p className="product-detail__desc-text">{product.description}</p>
+              <div
+                className="product-detail__desc-text"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
             </div>
           )}
 

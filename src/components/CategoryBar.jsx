@@ -191,10 +191,12 @@ const CategoryBar = ({ categoryLinks = [] }) => {
   const [active, setActive] = useState(null);
   const [categories, setCategories] = useState([]);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [isVisible, setIsVisible] = useState(true);
   const scrollRef = useRef(null);
   const itemRefs = useRef({});
   const dropdownRefs = useRef({});
   const hoverTimeoutRef = useRef(null);
+  const lastScrollYRef = useRef(0);
 
   // Use the caching hook to fetch categories only once globally
   const {
@@ -296,8 +298,37 @@ const CategoryBar = ({ categoryLinks = [] }) => {
     };
   }, []);
 
+  // Handle scroll to show/hide category bar
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Show navbar when scrolling up or at the top
+      if (currentScrollY < lastScrollYRef.current || currentScrollY < 100) {
+        setIsVisible(true);
+      }
+      // Hide navbar when scrolling down past 100px
+      else if (
+        currentScrollY > lastScrollYRef.current &&
+        currentScrollY > 100
+      ) {
+        setIsVisible(false);
+      }
+
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   return (
-    <nav className="category-bar">
+    <nav
+      className={`category-bar ${isVisible ? "category-bar--visible" : "category-bar--hidden"}`}
+    >
       <div className="category-bar__inner">
         <div className="category-bar__list" ref={scrollRef}>
           {labels.map((label, i) => {
