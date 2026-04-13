@@ -1,0 +1,75 @@
+.wishlist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.wishlist-btn svg {
+  transition: all 0.3s ease;
+  stroke-width: 2;
+}
+
+.wishlist-btn svg.filled {
+  fill: currentColor;
+  stroke-width: 1.5;
+}
+
+.wishlist-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.wishlist-btn--active {
+  color: #ef4444;
+}
+
+.wishlist-btn--active svg {
+  fill: #ef4444;
+}
+
+.wishlist-btn--active:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.wishlist-btn--small {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.wishlist-btn--large {
+  padding: 12px 16px;
+  font-size: 15px;
+}
+
+.wishlist-btn--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wishlist-btn--loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import ProductCard from "../components/ProductCard";
 import { getProducts } from "../services/api";
+import {
+  getZoneByInput,
+  formatCityResult,
+  ensureVirtualCity,
+} from "../services/indiaPostAPI";
 import "./CategoryProductsPage.css";
 import {
   MdFilterList,
@@ -56,6 +61,12 @@ export default function AllProductsPage() {
   const [cities, setCities] = useState([]);
   const [plans, setPlans] = useState([]);
 
+  // City search states (India Post API)
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
   const ratingOptions = [5, 4, 3, 2, 1];
 
   // Track pending requests to avoid duplicates
@@ -97,16 +108,22 @@ export default function AllProductsPage() {
           axios.get(`${API_BASE}/cities`),
           axios.get(`${API_BASE}/plans`),
         ]);
-        setCities(
-          Array.isArray(citiesRes.data)
-            ? citiesRes.data
-            : citiesRes.data.cities || [],
+        let fetchedCities = Array.isArray(citiesRes.data)
+          ? citiesRes.data
+          : citiesRes.data.cities || [];
+
+        // Ensure Virtual city exists for base plan support
+        fetchedCities = ensureVirtualCity(fetchedCities);
+
+        setCities(fetchedCities);
+        const fetchedPlans = Array.isArray(plansRes.data)
+          ? plansRes.data
+          : plansRes.data.plans || [];
+        // Sort plans by sequence
+        const sortedPlans = [...fetchedPlans].sort(
+          (a, b) => (a.sequence || 0) - (b.sequence || 0),
         );
-        setPlans(
-          Array.isArray(plansRes.data)
-            ? plansRes.data
-            : plansRes.data.plans || [],
-        );
+        setPlans(sortedPlans);
       } catch (err) {
         console.error("Failed to fetch cities/plans:", err);
       }
@@ -133,8 +150,19 @@ export default function AllProductsPage() {
         params.category = allCatIds.join(",");
       }
 
-      // Add city filter
-      if (selectedCities.length > 0) params.city = selectedCities.join(",");
+      // Add zone filter (extract zones from selected cities)
+      if (selectedCities.length > 0) {
+        const zones = selectedCities
+          .map((cityId) => {
+            const city = cities.find((c) => c._id === cityId);
+            return city?.zone;
+          })
+          .filter(Boolean); // Remove undefined values
+
+        if (zones.length > 0) {
+          params.zone = zones.join(",");
+        }
+      }
 
       // Add plan filter
       if (selectedPlans.length > 0) params.plan = selectedPlans.join(",");
@@ -275,6 +303,54 @@ export default function AllProductsPage() {
     setSkip(0);
   };
 
+  // City search handler (India Post API)
+  const handleCitySearch = async (input) => {
+    setSearchInput(input);
+    setSearchError("");
+
+    if (input.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    const result = await getZoneByInput(input);
+
+    if (result.success) {
+      const formatted = formatCityResult(result);
+      setSearchResults([formatted]);
+    } else {
+      setSearchError(result.error || "No results found");
+      setSearchResults([]);
+    }
+    setSearching(false);
+  };
+
+  // Add searched city to filter
+  const handleAddSearchedCity = (searchResult) => {
+    // Auto-select base plan if virtual city is being added and base is not selected
+    if (
+      searchResult.name?.toLowerCase() === "virtual" &&
+      plans.find((p) => p.name?.toLowerCase() === "base")?._id !==
+        selectedPlans[0]
+    ) {
+      const basePlan = plans.find((p) => p.name?.toLowerCase() === "base");
+      if (basePlan) {
+        setSelectedPlans([basePlan._id]);
+      }
+    }
+
+    // Check if already in cities list
+    const exists = cities.some((c) => c._id === searchResult._id);
+    if (!exists) {
+      setCities([...cities, searchResult]);
+    }
+    setSelectedCities([...selectedCities, searchResult._id]);
+    setSearchInput("");
+    setSearchResults([]);
+    setSearchError("");
+  };
+
   return (
     <div className="category-products-page">
       <div className="compliance-header">
@@ -300,7 +376,7 @@ export default function AllProductsPage() {
         <div className="top-filters-section">
           {/* Categories */}
           <div className="top-filter-group">
-            <h4 className="top-filter-title">Category</h4>
+            <h4 className="top-filter-title">Audits</h4>
             <div className="top-filter-items-expandable">
               {categories.length > 0 ? (
                 categories.map((cat) => (
@@ -400,14 +476,17 @@ export default function AllProductsPage() {
                 {plans.map((plan) => (
                   <label key={plan._id} className="top-filter-checkbox">
                     <input
-                      type="checkbox"
-                      checked={selectedPlans.includes(plan._id)}
+                      type="radio"
+                      name="service-plan"
+                      checked={selectedPlans[0] === plan._id}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          const newPlans = [...selectedPlans, plan._id];
-                          setSelectedPlans(newPlans);
+                          setSelectedPlans([plan._id]);
                           setValidationError("");
-
+                          // Clear previously selected cities when changing plan
+                          setSelectedCities([]); // Clear search input and results when plan changes
+                          setSearchInput("");
+                          setSearchResults([]);
                           // If "base" plan is selected, auto-select "virtual" city
                           if (plan.name?.toLowerCase() === "base") {
                             const virtualCity = cities.find(
@@ -416,15 +495,6 @@ export default function AllProductsPage() {
                             if (virtualCity) {
                               setSelectedCities([virtualCity._id]);
                             }
-                          }
-                        } else {
-                          setSelectedPlans(
-                            selectedPlans.filter((id) => id !== plan._id),
-                          );
-
-                          // If deselecting "base" plan, clear city selection
-                          if (plan.name?.toLowerCase() === "base") {
-                            setSelectedCities([]);
                           }
                         }
                       }}
@@ -443,19 +513,183 @@ export default function AllProductsPage() {
               {selectedPlans.length === 0 && selectedCities.length === 0 && (
                 <p className="filter-info-text">Select a Plan first</p>
               )}
+              {selectedPlans.length > 0 && (
+                <p
+                  className="filter-info-text"
+                  style={{ fontSize: "12px", color: "#666" }}
+                >
+                  {(() => {
+                    const selectedPlan = plans.find(
+                      (p) => p._id === selectedPlans[0],
+                    );
+                    if (selectedPlan?.name?.toLowerCase() === "base") {
+                      return "For base plan only virtual service available";
+                    }
+                    const maxCities =
+                      selectedPlan?.name?.toLowerCase() === "advanced" ? 4 : 2;
+                    return `Select up to ${maxCities} cities for ${selectedPlan?.name}`;
+                  })()}
+                </p>
+              )}
+
+              {/* City Search Input (India Post API) */}
+              <div style={{ marginBottom: "10px" }}>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <input
+                    type="text"
+                    placeholder="Search by pincode or city..."
+                    value={searchInput}
+                    onChange={(e) => handleCitySearch(e.target.value)}
+                    disabled={
+                      selectedPlans.length === 0 ||
+                      plans
+                        .find((p) => p._id === selectedPlans[0])
+                        ?.name?.toLowerCase() === "base"
+                    }
+                    style={{
+                      flex: 1,
+                      padding: "14px 16px",
+                      fontSize: "15px",
+                      fontWeight: "500",
+                      border: "2px solid #0ea5e9",
+                      borderRadius: "8px",
+                      outline: "none",
+                      opacity:
+                        selectedPlans.length === 0 ||
+                        plans
+                          .find((p) => p._id === selectedPlans[0])
+                          ?.name?.toLowerCase() === "base"
+                          ? 0.5
+                          : 1,
+                      cursor:
+                        selectedPlans.length === 0 ||
+                        plans
+                          .find((p) => p._id === selectedPlans[0])
+                          ?.name?.toLowerCase() === "base"
+                          ? "not-allowed"
+                          : "pointer",
+                      boxShadow:
+                        selectedPlans.length === 0 ||
+                        plans
+                          .find((p) => p._id === selectedPlans[0])
+                          ?.name?.toLowerCase() === "base"
+                          ? "none"
+                          : "0 0 0 3px rgba(14, 165, 233, 0.1)",
+                      transition: "all 0.2s ease",
+                    }}
+                    onFocus={(e) => {
+                      if (
+                        selectedPlans.length > 0 &&
+                        plans
+                          .find((p) => p._id === selectedPlans[0])
+                          ?.name?.toLowerCase() !== "base"
+                      ) {
+                        e.target.style.boxShadow =
+                          "0 0 0 4px rgba(14, 165, 233, 0.2)";
+                        e.target.style.borderColor = "#0284c7";
+                      }
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.boxShadow =
+                        "0 0 0 3px rgba(14, 165, 233, 0.1)";
+                      e.target.style.borderColor = "#0ea5e9";
+                    }}
+                  />
+                </div>
+
+                {/* Search Results */}
+                {searching && (
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "#0284c7",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Searching...
+                  </p>
+                )}
+                {searchError && (
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "#dc2626",
+                      marginTop: "4px",
+                    }}
+                  >
+                    {searchError}
+                  </p>
+                )}
+                {searchResults.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      padding: "6px",
+                      backgroundColor: "#f0f9ff",
+                      borderRadius: "4px",
+                      border: "1px solid #bfdbfe",
+                    }}
+                  >
+                    {searchResults.map((result) => (
+                      <div
+                        key={result._id}
+                        style={{
+                          fontSize: "12px",
+                          padding: "6px",
+                          cursor: "pointer",
+                          borderRadius: "3px",
+                          marginBottom: "4px",
+                          backgroundColor: "#fff",
+                          border: "1px solid #dbeafe",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = "#e0f2fe";
+                          e.currentTarget.style.borderColor = "#0284c7";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = "#fff";
+                          e.currentTarget.style.borderColor = "#dbeafe";
+                        }}
+                        onClick={() => handleAddSearchedCity(result)}
+                      >
+                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                          {result.name}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#64748b" }}>
+                          {result.state} • Zone: {result.zone} •{" "}
+                          {result.pincode}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="top-filter-items">
                 {cities.map((city) => {
-                  const isBasePlanSelected = selectedPlans.some((planId) => {
-                    const plan = plans.find((p) => p._id === planId);
-                    return plan?.name?.toLowerCase() === "base";
-                  });
+                  const selectedPlan = plans.find(
+                    (p) => p._id === selectedPlans[0],
+                  );
+                  const isBasePlanSelected =
+                    selectedPlan?.name?.toLowerCase() === "base";
                   const isVirtualCity = city.name?.toLowerCase() === "virtual";
+
+                  // Get max cities allowed based on selected plan
+                  const maxCities =
+                    selectedPlan?.name?.toLowerCase() === "advanced" ? 4 : 2;
+                  const isAtLimit =
+                    selectedCities.length >= maxCities &&
+                    !selectedCities.includes(city._id);
+
                   const isCityDisabled =
                     isBasePlanSelected && !isVirtualCity
                       ? true
                       : selectedPlans.length === 0
                         ? true
-                        : false;
+                        : isAtLimit
+                          ? true
+                          : false;
 
                   return (
                     <label
@@ -465,6 +699,11 @@ export default function AllProductsPage() {
                         opacity: isCityDisabled ? 0.5 : 1,
                         cursor: isCityDisabled ? "not-allowed" : "pointer",
                       }}
+                      title={
+                        isAtLimit
+                          ? `Maximum ${maxCities} cities for ${selectedPlan?.name} plan`
+                          : ""
+                      }
                     >
                       <input
                         type="checkbox"
@@ -477,9 +716,39 @@ export default function AllProductsPage() {
                             );
                             return;
                           }
+                          // Auto-select base plan if virtual city is being selected
+                          if (
+                            isVirtualCity &&
+                            !isBasePlanSelected &&
+                            e.target.checked
+                          ) {
+                            const basePlan = plans.find(
+                              (p) => p.name?.toLowerCase() === "base",
+                            );
+                            if (basePlan) {
+                              setSelectedPlans([basePlan._id]);
+                              setValidationError("");
+                            }
+                          }
                           setValidationError("");
 
                           if (e.target.checked) {
+                            // Get selected plan and determine max cities allowed
+                            const selectedPlan = plans.find((p) =>
+                              selectedPlans.includes(p._id),
+                            );
+                            const maxCities =
+                              selectedPlan?.name?.toLowerCase() === "advanced"
+                                ? 4
+                                : 2;
+
+                            if (selectedCities.length >= maxCities) {
+                              alert(
+                                `You can only select ${maxCities} cities for ${selectedPlan?.name || "this"} plan`,
+                              );
+                              return;
+                            }
+
                             setSelectedCities([...selectedCities, city._id]);
                           } else {
                             setSelectedCities(
@@ -735,6 +1004,9 @@ export default function AllProductsPage() {
                     key={product._id || product.id}
                     product={product}
                     viewMode={viewMode}
+                    selectedCities={selectedCities}
+                    selectedPlans={selectedPlans}
+                    cities={cities}
                   />
                 ))}
               </div>

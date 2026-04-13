@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { MdStar, MdStarBorder } from "react-icons/md";
 import "./ProductCard.css";
 
@@ -8,22 +8,89 @@ const ProductCard = ({
   viewMode = "grid",
   selectedCity = null,
   selectedPlan = null,
+  selectedCities = [],
+  selectedPlans = [],
+  cities = [],
 }) => {
-  // Build product URL with filter parameters if available
-  const buildProductUrl = () => {
+  // TEST: Absolute minimum log to see if code runs
+  console.log(
+    "PRODUCTCARD V2 LOADED - Cities:",
+    selectedCities?.length,
+    "Plans:",
+    selectedPlans?.length,
+  );
+  const productUrl = useMemo(() => {
+    // Ensure we have arrays and filter out any falsy values
+    const citiesToPass =
+      Array.isArray(selectedCities) && selectedCities.length > 0
+        ? selectedCities.filter(Boolean)
+        : selectedCity
+          ? [selectedCity]
+          : [];
+
+    const plansToPass =
+      Array.isArray(selectedPlans) && selectedPlans.length > 0
+        ? selectedPlans.filter(Boolean)
+        : selectedPlan
+          ? [selectedPlan]
+          : [];
+
+    // Convert city IDs to zones
+    const zonesToPass = citiesToPass
+      .map((cityId) => {
+        const city = cities.find((c) => c._id === cityId);
+        return city?.zone;
+      })
+      .filter(Boolean);
+
+    // Debug logging
+    console.log("🔗 Building URL with:", {
+      citiesToPass,
+      zonesToPass,
+      plansToPass,
+      citiesString: citiesToPass.join(","),
+      zonesString: zonesToPass.join(","),
+      plansString: plansToPass.join(","),
+    });
+
+    // Build URL directly with string concatenation for clarity
     let url = `/product/${product?._id}`;
-    const params = new URLSearchParams();
+    const queryParts = [];
 
-    if (selectedCity) {
-      params.append("city", selectedCity);
-    }
-    if (selectedPlan) {
-      params.append("plan", selectedPlan);
+    if (zonesToPass.length > 0) {
+      const zoneString = zonesToPass.join(",");
+      queryParts.push(`zone=${zoneString}`);
+      console.log("✅ Zone param added:", zoneString);
     }
 
-    const queryString = params.toString();
-    return queryString ? `${url}?${queryString}` : url;
-  };
+    if (plansToPass.length > 0) {
+      const planString = plansToPass.join(",");
+      queryParts.push(`plan=${planString}`);
+      console.log("✅ Plan param added:", planString);
+    }
+
+    if (queryParts.length > 0) {
+      url += `?${queryParts.join("&")}`;
+    }
+
+    console.log("🎯 Final URL:", url);
+    return url;
+  }, [
+    product?._id,
+    selectedCities,
+    selectedPlans,
+    selectedCity,
+    selectedPlan,
+    cities,
+  ]);
+
+  // Debug: Always log to ensure code is running
+  console.log("🎨 ProductCard RENDER - New memoized version active", {
+    productId: product?._id,
+    selectedCitiesReceived: selectedCities,
+    selectedPlansReceived: selectedPlans,
+    productUrl: productUrl,
+  });
   if (loading) {
     return (
       <div className="product-card product-card--skeleton">
@@ -100,14 +167,15 @@ const ProductCard = ({
           <p className="product-card__price">
             ₹
             {Number(
-              product?.displayPrice ||
+              product?.finalPrice ||
+                product?.displayPrice ||
                 product?.basePrice ||
                 product?.price ||
                 product?.startingPrice ||
                 0,
             ).toLocaleString("en-IN")}
           </p>
-          <a href={buildProductUrl()} className="product-card__btn">
+          <a href={productUrl} className="product-card__btn">
             SELECT OPTIONS
           </a>
         </div>
@@ -195,7 +263,8 @@ const ProductCard = ({
         <p className="product-card__price">
           ₹
           {Number(
-            product?.displayPrice ||
+            product?.finalPrice ||
+              product?.displayPrice ||
               product?.basePrice ||
               product?.price ||
               product?.startingPrice ||
@@ -203,7 +272,7 @@ const ProductCard = ({
           ).toLocaleString("en-IN")}
         </p>
         <span className="product-card__fee-label">FIXED FEE</span>
-        <a href={buildProductUrl()} className="product-card__btn">
+        <a href={productUrl} className="product-card__btn">
           CONFIGURE SERVICE
         </a>
       </div>

@@ -11,32 +11,56 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cities, setCities] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [cities, setCities] = useState([]);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
   // Extract filter parameters from URL
-  const cityId = searchParams.get("city");
-  const planId = searchParams.get("plan");
+  const zoneParam = searchParams.get("zone");
+  const planParam = searchParams.get("plan");
+
+  // Parse zone and plan params (can be comma-separated for multiple)
+  const selectedZones = zoneParam ? zoneParam.split(",").filter(Boolean) : [];
+  const selectedPlanIds = planParam ? planParam.split(",").filter(Boolean) : [];
+
+  // Zone options for display
+  const ZONE_OPTIONS = {
+    basecity: "📍 Your Base City",
+    north: "🔵 North Zone",
+    south: "🔵 South Zone",
+    east: "🔵 East Zone",
+    west: "🔵 West Zone",
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch product
-        const productRes = await axios.get(`${API_BASE}/products/${id}`);
-        setProduct(productRes.data);
+        // If zones and plan are provided, fetch with filters to get finalPrice calculated
+        if (selectedZones.length > 0 && selectedPlanIds.length > 0) {
+          const query = new URLSearchParams({
+            zone: selectedZones.join(","),
+            plan: selectedPlanIds.join(","),
+          });
 
-        // Fetch cities and plans for reference
-        const [citiesRes, plansRes] = await Promise.all([
-          axios.get(`${API_BASE}/cities`),
-          axios.get(`${API_BASE}/plans`),
-        ]);
+          const productsRes = await axios.get(
+            `${API_BASE}/products/${id}?${query.toString()}`,
+          );
+          setProduct(productsRes.data);
+        } else {
+          // Fetch product normally
+          const productRes = await axios.get(`${API_BASE}/products/${id}`);
+          setProduct(productRes.data);
+        }
 
-        setCities(citiesRes.data.cities || citiesRes.data || []);
+        // Fetch plans and cities for reference
+        const plansRes = await axios.get(`${API_BASE}/plans`);
         setPlans(plansRes.data.plans || plansRes.data || []);
+
+        const citiesRes = await axios.get(`${API_BASE}/cities`);
+        setCities(citiesRes.data.cities || citiesRes.data || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -45,7 +69,7 @@ const ProductDetailPage = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, selectedZones.join(","), selectedPlanIds.join(",")]);
 
   if (loading) {
     return (
@@ -70,27 +94,43 @@ const ProductDetailPage = () => {
     );
   }
 
-  // Find selected variant if filters are applied
-  const selectedVariant =
-    cityId && planId
-      ? product.variants?.find(
-          (v) =>
-            v.city?._id?.toString() === cityId &&
-            v.plan?._id?.toString() === planId,
-        )
-      : null;
+  // Find selected variant if single zone and plan are applied
+  // (with multiple zones, variants across zones don't directly map to a single variant)
+  let selectedVariant = null;
+  if (selectedZones.length === 1 && selectedPlanIds.length === 1) {
+    // Find the variant matching the zone and plan
+    if (product.variants) {
+      selectedVariant = product.variants.find(
+        (v) =>
+          v.zone === selectedZones[0] &&
+          v.plan?._id?.toString() === selectedPlanIds[0],
+      );
+    }
+  }
 
-  // Get city and plan names
-  const selectedCity = cities.find((c) => c._id === cityId);
-  const selectedPlan = plans.find((p) => p._id === planId);
+  // Get selected plan names for display
+  const selectedPlans = plans.filter((p) => selectedPlanIds.includes(p._id));
+  const selectedPlanNames = selectedPlans.map((p) => p.name);
+
+  // Get selected zone names for display
+  const ZONE_NAMES = {
+    north: "North Zone",
+    south: "South Zone",
+    east: "East Zone",
+    west: "West Zone",
+    basecity: "Your Base City",
+  };
+  const selectedZoneNames = selectedZones.map((z) => ZONE_NAMES[z] || z);
 
   // Determine price to display
-  const displayPrice =
-    selectedVariant?.salePrice ||
-    selectedVariant?.price ||
-    product.displayPrice ||
-    product.basePrice ||
-    0;
+  // If finalPrice exists, it means multiple cities were selected - show the combined price
+  const displayPrice = product.finalPrice
+    ? product.finalPrice
+    : selectedVariant?.salePrice ||
+      selectedVariant?.price ||
+      product.displayPrice ||
+      product.basePrice ||
+      0;
 
   return (
     <div className="product-detail">
@@ -131,22 +171,22 @@ const ProductDetailPage = () => {
         <div className="product-detail__top-info">
           {/* Left: Applied Filters */}
           <div className="product-detail__top-left">
-            {(cityId || planId) && (
+            {(selectedZones.length > 0 || selectedPlanIds.length > 0) && (
               <div className="product-detail__filter-info">
                 <span className="product-detail__filter-label">
                   Applied Filters:
                 </span>
                 <div className="product-detail__filter-tags">
-                  {selectedPlan && (
-                    <span className="product-detail__filter-tag">
-                      {selectedPlan.name}
+                  {selectedPlanNames.map((planName) => (
+                    <span key={planName} className="product-detail__filter-tag">
+                      {planName}
                     </span>
-                  )}
-                  {selectedCity && (
-                    <span className="product-detail__filter-tag">
-                      {selectedCity.name}
+                  ))}
+                  {selectedZoneNames.map((zoneName) => (
+                    <span key={zoneName} className="product-detail__filter-tag">
+                      {zoneName}
                     </span>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
