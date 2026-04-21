@@ -515,19 +515,99 @@
 
   .navbar__signin {
     display: flex;
+    align-items: center;
     font-size: 13px;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 6px;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
     transition:
       background 0.15s,
-      color 0.15s;
-    font-weight: 600;
+      color 0.15s,
+      transform 0.12s;
+    font-weight: 700;
+    background: var(--teal);
+    color: white;
+    box-shadow: 0 6px 18px rgba(0, 191, 174, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.04);
   }
 
   .navbar__signin:hover {
-    background: #f0f4ff;
-    color: #4cc9ca;
+    transform: translateY(-2px);
+    filter: brightness(0.98);
+  }
+
+  .navbar__signin:active {
+    transform: translateY(0);
+  }
+
+  .user-logged {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--teal) 0%, var(--teal-mid) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(0, 191, 174, 0.12);
+  }
+
+  /* Logged-in: make only the avatar visible (no pill button around it) */
+  .navbar__signin.user-logged {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    border: none;
+  }
+
+  /* container becomes positioning root for the logout popover */
+  .user-logged {
+    position: relative;
+  }
+
+  .logout-btn {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(13, 31, 60, 0.12);
+    color: var(--text-primary);
+    margin-left: 0;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease;
+    white-space: nowrap;
+    z-index: 60;
+    font-weight: 600;
+  }
+
+  /* reveal logout as a small popover below the avatar */
+  .user-logged:hover .logout-btn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* smaller avatar on compact layouts */
+  @media (max-width: 767px) {
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 13px;
+    }
   }
 
   .navbar__mobile-search {

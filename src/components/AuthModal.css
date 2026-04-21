@@ -1,0 +1,206 @@
+.authmodal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 22, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 24px;
+}
+
+.authmodal {
+  width: 820px;
+  max-width: 100%;
+  background: var(--white);
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 10px 30px rgba(13, 31, 60, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.authmodal-close {
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.authmodal-left {
+  background: linear-gradient(180deg, var(--navy) 0%, var(--blue-dark) 100%);
+  color: white;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.authmodal-left h2 {
+  margin-bottom: 8px;
+  font-size: 22px;
+}
+
+.authmodal-sub {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+}
+
+.authmodal-right {
+  padding: 28px 32px;
+}
+
+.authmodal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.authmodal-tabs button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.authmodal-tabs button.active {
+  background: var(--teal);
+  color: white;
+  border-color: var(--teal);
+}
+
+.authmodal-error {
+  background: #fff1f2;
+  border: 1px solid var(--red);
+  color: var(--red);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.authmodal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.authmodal-form label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.authmodal-form input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.btn.primary {
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.btn.primary.full {
+  width: 100%;
+}
+
+.authmodal-form input:focus {
+  outline: none;
+  border-color: var(--teal-mid);
+  box-shadow: 0 6px 18px rgba(0, 191, 174, 0.08);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.pwd-strength {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pwd-bar {
+  height: 8px;
+  flex: 1 1 auto;
+  background: #f3f4f6;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pwd-bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #00bfae);
+  transition: width 220ms ease;
+}
+
+.pwd-bar.s0::after {
+  width: 6%;
+  background: #ef4444;
+}
+.pwd-bar.s1::after {
+  width: 28%;
+  background: #f97316;
+}
+.pwd-bar.s2::after {
+  width: 50%;
+  background: #f59e0b;
+}
+.pwd-bar.s3::after {
+  width: 76%;
+  background: #10b981;
+}
+.pwd-bar.s4::after {
+  width: 100%;
+  background: #00bfae;
+}
+
+.pwd-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 70px;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .authmodal {
+    grid-template-columns: 1fr;
+  }
+  .authmodal-left {
+    display: none;
+  }
+  .authmodal {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .authmodal {
+    grid-template-columns: 1fr;
+  }
+  .authmodal-left {
+    display: none;
+  }
+}

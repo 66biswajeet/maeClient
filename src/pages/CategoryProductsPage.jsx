@@ -568,12 +568,18 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ProductCard from "../components/ProductCard";
+import PlanBasedCitySelector from "../components/PlanBasedCitySelector";
 import { getProducts } from "../services/api";
 import {
   getZoneByInput,
   formatCityResult,
   ensureVirtualCity,
 } from "../services/indiaPostAPI";
+import {
+  calculateProductPrice,
+  getAvailableCitiesForPlan,
+  formatPrice,
+} from "../services/pricingCalculator";
 import "./CategoryProductsPage.css";
 import {
   MdFilterList,
@@ -627,6 +633,11 @@ export default function CategoryProductsPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
+
+  // Plan-based city selection states
+  const [selectedBaseCity, setSelectedBaseCity] = useState(null);
+  const [additionalSelectedCities, setAdditionalSelectedCities] = useState([]);
+  const [validationError, setValidationError] = useState("");
 
   const ratingOptions = [5, 4, 3, 2, 1];
 
@@ -704,18 +715,14 @@ export default function CategoryProductsPage() {
       if (priceRange.min) params.minPrice = priceRange.min;
       if (priceRange.max) params.maxPrice = priceRange.max;
 
-      // Convert selected cities to zones
-      if (selectedCities.length > 0) {
-        const zones = selectedCities
-          .map((cityId) => {
-            const city = cities.find((c) => c._id === cityId);
-            return city?.zone;
-          })
-          .filter(Boolean); // Remove undefined values
-
-        if (zones.length > 0) {
-          params.zone = zones.join(",");
-        }
+      // Send client base city and additional zones
+      if (selectedBaseCity) params.clientBaseCity = selectedBaseCity.name;
+      if (additionalSelectedCities.length > 0) {
+        const additionalZones = additionalSelectedCities
+          .map((c) => c.zone)
+          .filter(Boolean);
+        if (additionalZones.length > 0)
+          params.additionalZones = additionalZones.join(",");
       }
 
       if (selectedPlans.length > 0) params.plan = selectedPlans.join(",");
@@ -775,6 +782,9 @@ export default function CategoryProductsPage() {
     setSelectedPlans([]);
     setSelectedRatings([]);
     setActiveFilters([]);
+    setSelectedBaseCity(null);
+    setAdditionalSelectedCities([]);
+    setValidationError("");
     setSkip(0);
   };
 
@@ -782,9 +792,9 @@ export default function CategoryProductsPage() {
   const handleCitySearch = async (input) => {
     setSearchInput(input);
     setSearchError("");
+    setSearchResults([]); // Clear previous results immediately
 
     if (input.length < 2) {
-      setSearchResults([]);
       return;
     }
 
@@ -792,11 +802,13 @@ export default function CategoryProductsPage() {
     const result = await getZoneByInput(input);
 
     if (result.success) {
-      const formatted = formatCityResult(result);
-      setSearchResults([formatted]);
+      // Format ALL results from the API, not just the first one
+      const formattedResults = result.results.map((res) =>
+        formatCityResult(res),
+      );
+      setSearchResults(formattedResults);
     } else {
       setSearchError(result.error || "No results found");
-      setSearchResults([]);
     }
     setSearching(false);
   };
@@ -825,6 +837,82 @@ export default function CategoryProductsPage() {
     setSearchResults([]);
     setSearchError("");
   };
+
+  // Handle base city selection
+  const handleSelectBaseCity = (cityObj) => {
+    // Ensure city is in cities list
+    const exists = cities.some((c) => c._id === cityObj._id);
+    if (!exists) {
+      setCities([...cities, cityObj]);
+    }
+
+    setSelectedBaseCity(cityObj);
+    setSearchInput("");
+    setSearchResults([]);
+    setSearchError("");
+    setValidationError("");
+  };
+
+  // Handle adding additional city
+  const handleAddAdditionalCity = (cityObj) => {
+    const selectedPlan = plans.find((p) => p._id === selectedPlans[0]);
+    const additionalLimit = selectedPlan?.additionalCitiesLimit || 0;
+
+    if (additionalSelectedCities.length >= additionalLimit) {
+      setValidationError(
+        `You can only add up to ${additionalLimit} additional cities for this plan`,
+      );
+      return;
+    }
+
+    // Check if already selected as base city
+    if (selectedBaseCity && selectedBaseCity._id === cityObj._id) {
+      setValidationError("This city is already selected as base city");
+      return;
+    }
+
+    // Check if already in additional cities
+    if (additionalSelectedCities.some((c) => c._id === cityObj._id)) {
+      setValidationError("This city is already selected");
+      return;
+    }
+
+    // Ensure city is in cities list
+    const exists = cities.some((c) => c._id === cityObj._id);
+    if (!exists) {
+      setCities([...cities, cityObj]);
+    }
+
+    setAdditionalSelectedCities([...additionalSelectedCities, cityObj]);
+    setSearchInput("");
+    setSearchResults([]);
+    setSearchError("");
+    setValidationError("");
+  };
+
+  // Remove base city
+  const handleRemoveBaseCity = () => {
+    setSelectedBaseCity(null);
+    setValidationError("");
+  };
+
+  // Remove additional city
+  const handleRemoveAdditionalCity = (cityId) => {
+    setAdditionalSelectedCities(
+      additionalSelectedCities.filter((c) => c._id !== cityId),
+    );
+    setValidationError("");
+  };
+
+  // Sync baseCity + additionalCities to selectedCities for product filter
+  useEffect(() => {
+    const citiesArray = [];
+    if (selectedBaseCity) citiesArray.push(selectedBaseCity._id);
+    if (additionalSelectedCities.length > 0) {
+      citiesArray.push(...additionalSelectedCities.map((c) => c._id));
+    }
+    setSelectedCities(citiesArray);
+  }, [selectedBaseCity, additionalSelectedCities]);
 
   const handleApplyFilters = () => {
     setSkip(0);
@@ -990,9 +1078,12 @@ export default function CategoryProductsPage() {
                       setSelectedPlans([plan._id]);
                       // Clear previously selected cities when changing plan
                       setSelectedCities([]);
+                      setSelectedBaseCity(null);
+                      setAdditionalSelectedCities([]);
                       // Clear search input and results when plan changes
                       setSearchInput("");
                       setSearchResults([]);
+                      setValidationError("");
                     }}
                   />
                   <span>{plan.name}</span>
@@ -1001,260 +1092,39 @@ export default function CategoryProductsPage() {
             </div>
           </div>
 
-          {/* Cities */}
+          {/* Cities - Using new two-phase selector */}
           <div className="filter-group-top">
-            <label className="filter-label-top">
-              Select City
-              {plans.find((p) => p.name.toLowerCase() === "base")?._id ===
-                selectedPlans[0] && (
-                <span className="required-badge">
-                  (For BASE plan only Virtual is available)
-                </span>
-              )}
-            </label>
-            {selectedPlans.length > 0 && (
+            <label className="filter-label-top">Service Locations</label>
+            {selectedPlans.length > 0 ? (
+              <PlanBasedCitySelector
+                plan={plans.find((p) => p._id === selectedPlans[0])}
+                selectedBaseCity={selectedBaseCity}
+                additionalSelectedCities={additionalSelectedCities}
+                cities={cities}
+                searchResults={searchResults}
+                searchInput={searchInput}
+                searching={searching}
+                searchError={searchError}
+                validationError={validationError}
+                onSelectBaseCity={handleSelectBaseCity}
+                onAddAdditionalCity={handleAddAdditionalCity}
+                onRemoveBaseCity={handleRemoveBaseCity}
+                onRemoveAdditionalCity={handleRemoveAdditionalCity}
+                onSearch={handleCitySearch}
+                disabled={selectedPlans.length === 0}
+              />
+            ) : (
               <div
-                style={{ fontSize: "12px", color: "#666", marginBottom: "8px" }}
-              >
-                {(() => {
-                  const selectedPlan = plans.find(
-                    (p) => p._id === selectedPlans[0],
-                  );
-                  if (selectedPlan?.name?.toLowerCase() === "base") {
-                    return "For base plan only virtual service available";
-                  }
-                  const maxCities =
-                    selectedPlan?.name?.toLowerCase() === "advanced" ? 4 : 2;
-                  return `Select up to ${maxCities} cities for ${selectedPlan?.name}`;
-                })()}
-              </div>
-            )}
-
-            {/* City Search Input (India Post API) */}
-            <div style={{ marginBottom: "10px" }}>
-              <div style={{ display: "flex", gap: "6px" }}>
-                <input
-                  type="text"
-                  placeholder="Search by pincode or city..."
-                  value={searchInput}
-                  onChange={(e) => handleCitySearch(e.target.value)}
-                  disabled={
-                    selectedPlans.length === 0 ||
-                    plans
-                      .find((p) => p._id === selectedPlans[0])
-                      ?.name?.toLowerCase() === "base"
-                  }
-                  style={{
-                    flex: 1,
-                    padding: "14px 16px",
-                    fontSize: "15px",
-                    fontWeight: "500",
-                    border: "2px solid #0ea5e9",
-                    borderRadius: "8px",
-                    outline: "none",
-                    opacity:
-                      selectedPlans.length === 0 ||
-                      plans
-                        .find((p) => p._id === selectedPlans[0])
-                        ?.name?.toLowerCase() === "base"
-                        ? 0.5
-                        : 1,
-                    cursor:
-                      selectedPlans.length === 0 ||
-                      plans
-                        .find((p) => p._id === selectedPlans[0])
-                        ?.name?.toLowerCase() === "base"
-                        ? "not-allowed"
-                        : "pointer",
-                    boxShadow:
-                      selectedPlans.length === 0 ||
-                      plans
-                        .find((p) => p._id === selectedPlans[0])
-                        ?.name?.toLowerCase() === "base"
-                        ? "none"
-                        : "0 0 0 3px rgba(14, 165, 233, 0.1)",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    if (
-                      selectedPlans.length > 0 &&
-                      plans
-                        .find((p) => p._id === selectedPlans[0])
-                        ?.name?.toLowerCase() !== "base"
-                    ) {
-                      e.target.style.boxShadow =
-                        "0 0 0 4px rgba(14, 165, 233, 0.2)";
-                      e.target.style.borderColor = "#0284c7";
-                    }
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.boxShadow =
-                      "0 0 0 3px rgba(14, 165, 233, 0.1)";
-                    e.target.style.borderColor = "#0ea5e9";
-                  }}
-                />
-              </div>
-
-              {/* Search Results */}
-              {searching && (
-                <p
-                  style={{
-                    fontSize: "11px",
-                    color: "#0284c7",
-                    marginTop: "4px",
-                  }}
-                >
-                  Searching...
-                </p>
-              )}
-              {searchError && (
-                <p
-                  style={{
-                    fontSize: "11px",
-                    color: "#dc2626",
-                    marginTop: "4px",
-                  }}
-                >
-                  {searchError}
-                </p>
-              )}
-              {searchResults.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "6px",
-                    padding: "6px",
-                    backgroundColor: "#f0f9ff",
-                    borderRadius: "4px",
-                    border: "1px solid #bfdbfe",
-                  }}
-                >
-                  {searchResults.map((result) => (
-                    <div
-                      key={result._id}
-                      style={{
-                        fontSize: "12px",
-                        padding: "6px",
-                        cursor: "pointer",
-                        borderRadius: "3px",
-                        marginBottom: "4px",
-                        backgroundColor: "#fff",
-                        border: "1px solid #dbeafe",
-                        transition: "all 0.2s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#e0f2fe";
-                        e.currentTarget.style.borderColor = "#0284c7";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#fff";
-                        e.currentTarget.style.borderColor = "#dbeafe";
-                      }}
-                      onClick={() => handleAddSearchedCity(result)}
-                    >
-                      <div style={{ fontWeight: 600, color: "#0f172a" }}>
-                        {result.name}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#64748b" }}>
-                        {result.state} • Zone: {result.zone} • {result.pincode}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="city-filter-top">
-              <select
-                className="city-select-top"
-                disabled={
-                  plans.find((p) => p.name.toLowerCase() === "base")?._id !==
-                    selectedPlans[0] ||
-                  selectedCities.length >=
-                    (plans
-                      .find((p) => p._id === selectedPlans[0])
-                      ?.name?.toLowerCase() === "advanced"
-                      ? 4
-                      : 2)
-                }
-                onChange={(e) => {
-                  if (e.target.value) {
-                    // Check if virtual city is being selected
-                    const selectedCity = cities.find(
-                      (c) => c._id === e.target.value,
-                    );
-                    if (
-                      selectedCity?.name?.toLowerCase() === "virtual" &&
-                      plans.find((p) => p.name.toLowerCase() === "base")
-                        ?._id !== selectedPlans[0]
-                    ) {
-                      // Auto-select base plan if virtual is selected
-                      const basePlan = plans.find(
-                        (p) => p.name.toLowerCase() === "base",
-                      );
-                      if (basePlan) {
-                        setSelectedPlans([basePlan._id]);
-                        setValidationError("");
-                      }
-                    }
-
-                    // Get selected plan and determine max cities allowed
-                    const selectedPlan = plans.find(
-                      (p) => p._id === selectedPlans[0],
-                    );
-                    const maxCities =
-                      selectedPlan?.name?.toLowerCase() === "advanced" ? 4 : 2;
-
-                    if (selectedCities.length >= maxCities) {
-                      alert(
-                        `You can only select ${maxCities} cities for ${selectedPlan?.name || "this"} plan`,
-                      );
-                      e.target.value = "";
-                      return;
-                    }
-
-                    toggleCheckbox(
-                      e.target.value,
-                      selectedCities,
-                      setSelectedCities,
-                    );
-                    e.target.value = "";
-                  }
+                style={{
+                  color: "#999",
+                  fontSize: "12px",
+                  textAlign: "center",
+                  padding: "8px",
                 }}
               >
-                <option value="">Select mode</option>
-                {cities.map((city) => (
-                  <option key={city._id} value={city._id}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-              {selectedCities.length > 0 && (
-                <div className="city-tags-top">
-                  {selectedCities.slice(0, 2).map((cityId) => {
-                    const city = cities.find((c) => c._id === cityId);
-                    return (
-                      <span key={cityId} className="city-tag-top">
-                        {city?.name}
-                        <button
-                          onClick={() =>
-                            setSelectedCities(
-                              selectedCities.filter((c) => c !== cityId),
-                            )
-                          }
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    );
-                  })}
-                  {selectedCities.length > 2 && (
-                    <span className="city-tag-more">
-                      +{selectedCities.length - 2} more
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+                Select a plan first
+              </div>
+            )}
           </div>
         </div>
 
@@ -1522,6 +1392,7 @@ export default function CategoryProductsPage() {
                     selectedCities={selectedCities}
                     selectedPlans={selectedPlans}
                     cities={cities}
+                    selectedBaseCity={selectedBaseCity}
                   />
                 ))}
               </div>

@@ -68,8 +68,9 @@ const getZoneFromState = (state) => {
 /**
  * Search for location using India Post API
  * Detects if input is a 6-digit pincode or city name
+ * Returns ALL matching locations, not just the first one
  * @param {string} input - Either a 6-digit pincode or a city name
- * @returns {Promise<Object>} - Result with city, state, zone, pincode info
+ * @returns {Promise<Object>} - Result with array of all matching locations
  */
 export const getZoneByInput = async (input) => {
   if (!input?.trim()) {
@@ -90,16 +91,23 @@ export const getZoneByInput = async (input) => {
     const data = await response.json();
 
     if (data[0]?.Status === "Success" && data[0].PostOffice?.length > 0) {
-      const result = data[0].PostOffice[0];
-      const state = result.State;
-      const zone = getZoneFromState(state);
+      // Return ALL results from PostOffice array, not just the first one
+      const results = data[0].PostOffice.map((postOffice) => {
+        const state = postOffice.State;
+        const zone = getZoneFromState(state);
+
+        return {
+          city: postOffice.District, // District is actually the city name in India Post API
+          state,
+          zone,
+          pincode: postOffice.Pincode,
+          postOffice: postOffice.Name,
+          success: true,
+        };
+      });
 
       return {
-        city: result.District, // District is actually the city name in India Post API
-        state,
-        zone,
-        pincode: result.Pincode,
-        postOffice: result.Name,
+        results, // Array of all matching locations
         success: true,
       };
     }

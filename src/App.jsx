@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import MobileBottomNav from "./components/MobileBottomNav";
 import CategoryBar from "./components/CategoryBar";
@@ -8,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import CategoryProductsPage from "./pages/CategoryProductsPage";
 import AllProductsPage from "./pages/AllProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import WishlistPage from "./pages/WishlistPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 
@@ -87,6 +89,36 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster
+        position="bottom-right"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            style: {
+              background: "#10b981",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#10b981",
+            },
+          },
+          error: {
+            style: {
+              background: "#ef4444",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#ef4444",
+            },
+          },
+        }}
+      />
       <Layout settings={resolvedSettings}>
         <Routes>
           <Route path="/" element={<HomePage settings={resolvedSettings} />} />
@@ -101,10 +133,7 @@ function App() {
             element={<PlaceholderPage title="All Categories" />}
           />
           <Route path="/cart" element={<PlaceholderPage title="Cart" />} />
-          <Route
-            path="/wishlist"
-            element={<PlaceholderPage title="Wishlist" />}
-          />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/signin" element={<PlaceholderPage title="Sign In" />} />
           <Route
             path="*"

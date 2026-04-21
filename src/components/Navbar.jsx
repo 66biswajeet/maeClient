@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Phone,
@@ -9,16 +9,37 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
+import AuthModal from "./AuthModal";
+import { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useRootCategories } from "../hooks/useRootCategories";
+import { useWishlist } from "../hooks/useWishlist";
 import "./Navbar.css";
 
 const Navbar = ({ header }) => {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("mae_user"));
+    } catch (e) {
+      return null;
+    }
+  });
   const [searchVal, setSearchVal] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const navigate = useNavigate();
   const { categories, subcategoriesMap } = useRootCategories();
+  const { wishlist, fetchWishlist } = useWishlist();
+
+  // Set auth token when Navbar mounts or currentUser changes
+  useEffect(() => {
+    const token = localStorage.getItem("mae_token");
+    setAuthToken(token);
+    if (token) {
+      fetchWishlist();
+    }
+  }, [currentUser, fetchWishlist]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => ({
@@ -86,7 +107,7 @@ const Navbar = ({ header }) => {
             <div className="navbar__icons">
               <a href="/wishlist" className="icon-btn">
                 <Heart size={18} />
-                <span className="badge">4</span>
+                <span className="badge">{wishlist.length}</span>
               </a>
               <a href="/cart" className="icon-btn">
                 <ShoppingCart size={18} />
@@ -94,10 +115,49 @@ const Navbar = ({ header }) => {
               </a>
             </div>
 
-            <a href="/signin" className="navbar__signin">
-              <User size={16} />
-              <span>SignIn</span>
-            </a>
+            {currentUser ? (
+              <div
+                className="navbar__signin user-logged"
+                title={currentUser.name || currentUser.email}
+              >
+                <div className="user-avatar">
+                  {(currentUser.name || currentUser.email || "")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+                <button
+                  className="logout-btn"
+                  onClick={() => {
+                    localStorage.removeItem("mae_token");
+                    localStorage.removeItem("mae_user");
+                    setCurrentUser(null);
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                className="navbar__signin"
+                onClick={() => setAuthOpen(true)}
+              >
+                <User size={16} />
+                <span>Sign in</span>
+              </button>
+            )}
+
+            <AuthModal
+              isOpen={authOpen}
+              onClose={() => setAuthOpen(false)}
+              onAuthSuccess={(data) => {
+                try {
+                  setCurrentUser(
+                    data.customer ||
+                      JSON.parse(localStorage.getItem("mae_user")),
+                  );
+                } catch (e) {}
+              }}
+            />
           </div>
 
           {/* Mobile Search Icon */}
