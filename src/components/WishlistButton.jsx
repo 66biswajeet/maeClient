@@ -3,7 +3,13 @@ import { Heart } from "lucide-react";
 import { useWishlist } from "../hooks/useWishlist";
 import "./WishlistButton.css";
 
-const WishlistButton = ({ productId, zones = [], plans = [], cities = [], onToggle }) => {
+const WishlistButton = ({
+  productId,
+  zones = [],
+  plans = [],
+  cities = [],
+  onToggle,
+}) => {
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItem } =
     useWishlist();
   const [inWishlist, setInWishlist] = useState(false);
@@ -29,9 +35,18 @@ const WishlistButton = ({ productId, zones = [], plans = [], cities = [], onTogg
         // Ensure zones, plans, and cities are arrays
         const zonesArray = Array.isArray(zones) ? zones : zones ? [zones] : [];
         const plansArray = Array.isArray(plans) ? plans : plans ? [plans] : [];
-        const citiesArray = Array.isArray(cities) ? cities : cities ? [cities] : [];
+        const citiesArray = Array.isArray(cities)
+          ? cities
+          : cities
+            ? [cities]
+            : [];
 
-        const result = await addToWishlist(productId, zonesArray, plansArray, citiesArray);
+        const result = await addToWishlist(
+          productId,
+          zonesArray,
+          plansArray,
+          citiesArray,
+        );
         if (result.success) {
           setInWishlist(true);
         }

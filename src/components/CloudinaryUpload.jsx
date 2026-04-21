@@ -4,10 +4,10 @@ import { uploadToCloudinary } from "../services/cloudinaryService";
 /**
  * CloudinaryUpload Component
  * Reusable component for uploading images to Cloudinary
- * 
+ *
  * Usage:
- * <CloudinaryUpload 
- *   onUpload={(url) => setImageUrl(url)} 
+ * <CloudinaryUpload
+ *   onUpload={(url) => setImageUrl(url)}
  *   folder="products"
  *   multiple={false}
  * />

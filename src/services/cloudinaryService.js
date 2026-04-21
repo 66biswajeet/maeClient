@@ -24,7 +24,7 @@ export const uploadToCloudinary = async (file, folder = "makeauditeasy") => {
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -54,11 +54,9 @@ export const uploadToCloudinary = async (file, folder = "makeauditeasy") => {
  */
 export const uploadMultipleToCloudinary = async (
   files,
-  folder = "makeauditeasy"
+  folder = "makeauditeasy",
 ) => {
-  const uploadPromises = files.map((file) =>
-    uploadToCloudinary(file, folder)
-  );
+  const uploadPromises = files.map((file) => uploadToCloudinary(file, folder));
   return Promise.all(uploadPromises);
 };
 
@@ -70,9 +68,7 @@ export const uploadMultipleToCloudinary = async (
 export const deleteFromCloudinary = async (publicId) => {
   // Note: Deletion requires API Key and Secret, which should only be done from backend
   // This is a placeholder - actual deletion should be done via backend
-  console.warn(
-    "Deletion should be handled via backend using API credentials"
-  );
+  console.warn("Deletion should be handled via backend using API credentials");
 };
 
 export default {
