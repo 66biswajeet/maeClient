@@ -72,7 +72,10 @@ const Navbar = ({ header }) => {
 
           {/* Logo */}
           <a href="/" className="navbar__logo">
-            <img src="../public/logo.png" alt="Make Audit Easy" />
+            <img
+              src="https://res.cloudinary.com/dvbiizzjw/image/upload/q_auto/f_auto/v1776873075/makeauditeasy/a2x4bcavhqgfsdchc8a8.png"
+              alt="Make Audit Easy"
+            />
           </a>
           {/*  */}
           {/* Desktop Search */}
