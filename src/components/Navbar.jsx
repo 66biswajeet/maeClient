@@ -72,11 +72,7 @@ const Navbar = ({ header }) => {
 
           {/* Logo */}
           <a href="/" className="navbar__logo">
-            {header?.logoUrl ? (
-              <img src={header.logoUrl} alt="Make Audit Easy" />
-            ) : (
-              <img src="../public/logo.png" alt="Make Audit Easy" />
-            )}
+            <img src="../public/logo.png" alt="Make Audit Easy" />
           </a>
           {/*  */}
           {/* Desktop Search */}
