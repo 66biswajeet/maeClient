@@ -75,10 +75,7 @@ const Navbar = ({ header }) => {
             {header?.logoUrl ? (
               <img src={header.logoUrl} alt="Make Audit Easy" />
             ) : (
-              <span className="navbar__logo-text">
-                <span className="logo-check">✓</span>
-                <span className="logo-make">MAE</span>
-              </span>
+              <img src="../public/logo.png" alt="Make Audit Easy" />
             )}
           </a>
 
