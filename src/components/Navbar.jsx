@@ -78,7 +78,7 @@ const Navbar = ({ header }) => {
               <img src="../public/logo.png" alt="Make Audit Easy" />
             )}
           </a>
-
+          {/*  */}
           {/* Desktop Search */}
           <div className="navbar__search">
             <input
