@@ -7,6 +7,15 @@ export const api = axios.create({
   timeout: 10000,
 });
 
+// Request interceptor to attach token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("mae_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Response interceptor to handle expired tokens (401)
 api.interceptors.response.use(
   (response) => response,
@@ -36,14 +45,6 @@ export const removeFromWishlist = (wishlistId) =>
 export const checkInWishlist = (productId) =>
   api.get(`/wishlist/check/${productId}`);
 
-// Set auth token for wishlist requests
-export const setAuthToken = (token) => {
-  if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  } else {
-    delete api.defaults.headers.common["Authorization"];
-  }
-};
 
 // Cart API
 export const addToCart = (payload) => api.post("/cart", payload);

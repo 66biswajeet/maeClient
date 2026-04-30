@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { setAuthToken, addToCart, addToWishlist } from '../services/api';
+import { addToCart, addToWishlist } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -16,10 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('mae_token');
-    if (token) {
-      setAuthToken(token);
-    }
     setLoading(false);
   }, []);
 
@@ -53,14 +49,12 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, token) => {
     localStorage.setItem('mae_token', token);
     localStorage.setItem('mae_user', JSON.stringify(userData));
-    setAuthToken(token);
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('mae_token');
     localStorage.removeItem('mae_user');
-    setAuthToken(null);
     setUser(null);
   };
 
