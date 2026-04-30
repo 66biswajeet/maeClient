@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../hooks/useWishlist";
 import "./WishlistButton.css";
 
@@ -13,6 +15,9 @@ const WishlistButton = ({
 }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItem } =
     useWishlist();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [inWishlist, setInWishlist] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,6 +28,15 @@ const WishlistButton = ({
   const handleToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isAuthenticated) {
+      localStorage.setItem("mae_pending_action", JSON.stringify({
+        type: "ADD_TO_WISHLIST",
+        payload: { productId, zones, plans, cities }
+      }));
+      navigate("/login", { state: { from: location } });
+      return;
+    }
 
     setIsLoading(true);
     try {

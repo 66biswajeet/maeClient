@@ -14,7 +14,24 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import AccountPage from "./pages/AccountPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import { useSiteSettings } from "./hooks/useSiteSettings";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Navigate, useLocation } from "react-router-dom";
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return null; // Or a spinner
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
 
 const Layout = ({ children, settings }) => (
   <>
@@ -91,63 +108,100 @@ function App() {
   const resolvedSettings = settings || {};
 
   return (
-    <BrowserRouter>
-      <Toaster
-        position="bottom-right"
-        reverseOrder={false}
-        gutter={8}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-          success: {
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster
+          position="bottom-right"
+          reverseOrder={false}
+          gutter={8}
+          toastOptions={{
+            duration: 4000,
             style: {
-              background: "#10b981",
+              background: "#363636",
+              color: "#fff",
             },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "#10b981",
+            success: {
+              style: {
+                background: "#10b981",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#10b981",
+              },
             },
-          },
-          error: {
-            style: {
-              background: "#ef4444",
+            error: {
+              style: {
+                background: "#ef4444",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#ef4444",
+              },
             },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "#ef4444",
-            },
-          },
-        }}
-      />
-      <Layout settings={resolvedSettings}>
-        <Routes>
-          <Route path="/" element={<HomePage settings={resolvedSettings} />} />
-          <Route path="/products" element={<AllProductsPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route
-            path="/category/:categoryId/all"
-            element={<CategoryProductsPage />}
-          />
-          <Route
-            path="/categories"
-            element={<PlaceholderPage title="All Categories" />}
-          />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/signin" element={<PlaceholderPage title="Sign In" />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route
-            path="*"
-            element={<PlaceholderPage title="Page Not Found" />}
-          />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+          }}
+        />
+        <Layout settings={resolvedSettings}>
+          <Routes>
+            <Route
+              path="/"
+              element={<HomePage settings={resolvedSettings} />}
+            />
+            <Route path="/products" element={<AllProductsPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route
+              path="/category/:categoryId/all"
+              element={<CategoryProductsPage />}
+            />
+            <Route
+              path="/categories"
+              element={<PlaceholderPage title="All Categories" />}
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/signin" element={<Navigate to="/login" replace />} />
+            <Route
+              path="/account"
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={<PlaceholderPage title="Page Not Found" />}
+            />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
 export default App;
+
+

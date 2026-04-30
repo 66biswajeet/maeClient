@@ -7,6 +7,20 @@ export const api = axios.create({
   timeout: 10000,
 });
 
+// Response interceptor to handle expired tokens (401)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem("mae_token");
+      localStorage.removeItem("mae_user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
 export const getSiteSettings = () => api.get("/site-settings");
 export const getProducts = (params = {}) => api.get("/products", { params });
 

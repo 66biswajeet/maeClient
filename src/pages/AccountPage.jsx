@@ -19,8 +19,8 @@ import {
   getMyProfile,
   updateMyProfile,
   getMyBookings,
-  setAuthToken,
 } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import "./AccountPage.css";
 
 // Utility: format currency
@@ -145,13 +145,7 @@ function CityBreakdown({ item }) {
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("mae_user"));
-    } catch {
-      return null;
-    }
-  });
+  const { user: currentUser, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState(null);
@@ -176,12 +170,6 @@ export default function AccountPage() {
       country: "India",
     },
   });
-
-  // Set auth token on mount
-  useEffect(() => {
-    const token = localStorage.getItem("mae_token");
-    if (token) setAuthToken(token);
-  }, []);
 
   // Fetch profile
   const fetchProfile = useCallback(async () => {

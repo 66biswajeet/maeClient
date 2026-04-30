@@ -278,9 +278,11 @@
 import React, { useEffect, useState } from "react";
 import { getCart, updateCartItem, removeCartItem } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./cartPage.css";
 
 const CartPage = () => {
+  const { user: currentUser, isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -332,33 +334,7 @@ const CartPage = () => {
 
   const navigate = useNavigate();
 
-  const getStoredCustomer = () => {
-    const keys = ["mae_user", "user", "customer", "mae_customer"];
-    for (const k of keys) {
-      const v = localStorage.getItem(k);
-      if (v) {
-        try {
-          const parsed = JSON.parse(v);
-          if (parsed && (parsed._id || parsed.id)) return parsed;
-        } catch (_) {
-          // not JSON, skip
-        }
-      }
-    }
-    return null;
-  };
-
   const handleProceedToCheckout = () => {
-    const customer = getStoredCustomer();
-    const token =
-      localStorage.getItem("mae_token") || localStorage.getItem("token");
-    if (!customer || !(customer._id || customer.id)) {
-      // allow if token exists (user may be logged in but storage shape differs)
-      if (!token) {
-        navigate("/signin");
-        return;
-      }
-    }
     navigate("/checkout");
   };
 

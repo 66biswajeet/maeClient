@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { X, MapPin, Package, Heart, Share2, Check, ShoppingCart, ChevronRight, Trash2 } from "lucide-react";
 import axios from "axios";
 import { addToCart, getCart, removeCartItem } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../hooks/useWishlist";
 import WishlistButton from "../components/WishlistButton";
 import ProductFilterSelector from "../components/ProductFilterSelector";
@@ -169,6 +170,7 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -410,6 +412,8 @@ const ProductDetailPage = () => {
     basecity: "Your Base City",
   };
   const selectedZoneNames = selectedZones.map((z) => ZONE_NAMES[z] || z);
+
+  const { user: currentUser, isAuthenticated } = useAuth();
 
   // Determine price to display
   // If finalPrice exists, it means multiple cities were selected - show the combined price
@@ -728,22 +732,32 @@ const ProductDetailPage = () => {
               <button
                 className="product-detail__btn-add-to-cart"
                 onClick={async () => {
+                  const payload = {
+                    productId: product._id,
+                    productSnapshot: product,
+                    vendorSnapshot: product.vendor || null,
+                    filterSnapshot: {
+                      zones: selectedZones,
+                      plans: selectedPlanIds,
+                      cities: finalSelectedCities,
+                      filterHash: currentFilterHash,
+                      variantId: selectedVariant?._id || null,
+                    },
+                    quantity,
+                    unitPrice: displayPrice,
+                    currency: product.currency || "INR",
+                  };
+
+                  if (!isAuthenticated) {
+                    localStorage.setItem("mae_pending_action", JSON.stringify({
+                      type: "ADD_TO_CART",
+                      payload
+                    }));
+                    navigate("/login", { state: { from: location } });
+                    return;
+                  }
+
                   try {
-                    const payload = {
-                      productId: product._id,
-                      productSnapshot: product,
-                      vendorSnapshot: product.vendor || null,
-                      filterSnapshot: {
-                        zones: selectedZones,
-                        plans: selectedPlanIds,
-                        cities: finalSelectedCities,
-                        filterHash: currentFilterHash,
-                        variantId: selectedVariant?._id || null,
-                      },
-                      quantity,
-                      unitPrice: displayPrice,
-                      currency: product.currency || "INR",
-                    };
                     await addToCart(payload);
                     addToast(`"${product.title}" added to cart!`, "success");
                     await fetchCart();

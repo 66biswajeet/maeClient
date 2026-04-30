@@ -11,28 +11,8 @@ const WishlistPage = () => {
     useWishlist();
 
   useEffect(() => {
-    const token = localStorage.getItem("mae_token");
-    if (!token) {
-      navigate("/");
-      return;
-    }
     fetchWishlist();
-  }, []);
-
-  if (!localStorage.getItem("mae_token")) {
-    return (
-      <div className="wishlist-page empty">
-        <div className="content-wrapper">
-          <div className="empty-state">
-            <p>Please login to view your wishlist</p>
-            <button onClick={() => navigate("/")} className="btn primary">
-              Back to Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [fetchWishlist]);
 
   if (loading) {
     return (

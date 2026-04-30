@@ -9,22 +9,14 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
-import AuthModal from "./AuthModal";
-import { setAuthToken } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useRootCategories } from "../hooks/useRootCategories";
 import { useWishlist } from "../hooks/useWishlist";
 import "./Navbar.css";
 
 const Navbar = ({ header }) => {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("mae_user"));
-    } catch (e) {
-      return null;
-    }
-  });
+  const { user: currentUser, logout } = useAuth();
   const [searchVal, setSearchVal] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -32,11 +24,9 @@ const Navbar = ({ header }) => {
   const { categories, subcategoriesMap } = useRootCategories();
   const { wishlist, fetchWishlist } = useWishlist();
 
-  // Set auth token when Navbar mounts or currentUser changes
+  // Fetch wishlist when currentUser changes
   useEffect(() => {
-    const token = localStorage.getItem("mae_token");
-    setAuthToken(token);
-    if (token) {
+    if (currentUser) {
       fetchWishlist();
     }
   }, [currentUser, fetchWishlist]);
@@ -135,11 +125,7 @@ const Navbar = ({ header }) => {
                   </a>
                   <button
                     className="user-dropdown-item user-dropdown-logout"
-                    onClick={() => {
-                      localStorage.removeItem("mae_token");
-                      localStorage.removeItem("mae_user");
-                      setCurrentUser(null);
-                    }}
+                    onClick={logout}
                   >
                     <span style={{ fontSize: 14 }}>↩</span>
                     Logout
@@ -149,25 +135,12 @@ const Navbar = ({ header }) => {
             ) : (
               <button
                 className="navbar__signin"
-                onClick={() => setAuthOpen(true)}
+                onClick={() => navigate("/login")}
               >
                 <User size={16} />
                 <span>Sign in</span>
               </button>
             )}
-
-            <AuthModal
-              isOpen={authOpen}
-              onClose={() => setAuthOpen(false)}
-              onAuthSuccess={(data) => {
-                try {
-                  setCurrentUser(
-                    data.customer ||
-                      JSON.parse(localStorage.getItem("mae_user")),
-                  );
-                } catch (e) {}
-              }}
-            />
           </div>
 
           {/* Mobile Search Icon */}
