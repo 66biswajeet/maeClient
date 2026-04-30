@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Trash2, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Heart, Trash2, ShoppingCart, ArrowLeft, ExternalLink, Check } from "lucide-react";
 import { useWishlist } from "../hooks/useWishlist";
+import { addToCart } from "../services/api";
 import "./WishlistPage.css";
 
 const WishlistPage = () => {
@@ -86,7 +87,9 @@ const WishlistPage = () => {
 
 const WishlistItemCard = ({ item, onRemove }) => {
   const navigate = useNavigate();
-  const [isRemoving, setIsRemoving] = React.useState(false);
+  const [isRemoving,   setIsRemoving]   = useState(false);
+  const [cartAdded,    setCartAdded]    = useState(false);
+  const [cartLoading,  setCartLoading]  = useState(false);
 
   const handleRemove = async () => {
     setIsRemoving(true);
@@ -94,15 +97,66 @@ const WishlistItemCard = ({ item, onRemove }) => {
     setIsRemoving(false);
   };
 
-  const product = item.product;
-  const variants = item.variants || [];
+  // ── Build correct View URL ──────────────────────────────
+  // Use item.filters directly so duplicate zones (e.g. ["south","south"])
+  // are preserved. Build query manually — URLSearchParams encodes commas.
+  const buildViewUrl = () => {
+    const filters  = item.filters || {};
+    const zones    = filters.zones  || [];
+    const plans    = filters.plans  || [];
+    const cities   = filters.cities || [];
+
+    const parts = [];
+    if (zones.length)  parts.push(`zone=${zones.join(",")}`);
+    if (plans.length)  parts.push(`plan=${plans.join(",")}`);
+    if (cities.length) parts.push(`city=${cities.join(",")}`);
+
+    return `/product/${product?._id}${parts.length ? "?" + parts.join("&") : ""}`;
+  };
+
+  // ── Add to Cart ─────────────────────────────────────────
+  const handleAddToCart = async () => {
+    setCartLoading(true);
+    try {
+      const filters  = item.filters || {};
+      const payload = {
+        productId: product?._id,
+        productSnapshot: product
+          ? { ...product, finalPrice: item.totalPrice || 0 }
+          : null,
+        vendorSnapshot: product?.vendor || item.vendorInfo || null,
+        filterSnapshot: {
+          zones: filters.zones || [],
+          plans: filters.plans || [],
+          cities: filters.cities || [],
+          filterHash: item.filterHash || "",
+        },
+        quantity: 1,
+        unitPrice: item.totalPrice || 0,
+        currency: "INR",
+      };
+      await addToCart(payload);
+      setCartAdded(true);
+      setTimeout(() => setCartAdded(false), 2500);
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const product    = item.product;
+  const variants   = item.variants || [];
   const totalPrice = item.totalPrice || 0;
 
   return (
     <div className="wishlist-card">
       <div className="card-image">
-        {product?.images?.[0] ? (
-          <img src={product.images[0]} alt={product.title} />
+        {product?.images?.[0]?.url ? (
+          <img
+            src={product.images[0].url}
+            alt={product.images[0].alt || product.title}
+          />
         ) : (
           <div className="placeholder-image">No Image</div>
         )}
@@ -149,10 +203,9 @@ const WishlistItemCard = ({ item, onRemove }) => {
             {item.filters.zones && item.filters.zones.length > 0 && (
               <div className="filter-group">
                 <span className="filter-label">Zones:</span>
-                {item.filters.zones.map((zone, idx) => (
-                  <span key={idx} className="filter-pill zone">
-                    {zone}
-                  </span>
+                {/* De-dupe for display only */}
+                {[...new Set(item.filters.zones)].map((zone, idx) => (
+                  <span key={idx} className="filter-pill zone">{zone}</span>
                 ))}
               </div>
             )}
@@ -160,9 +213,7 @@ const WishlistItemCard = ({ item, onRemove }) => {
               <div className="filter-group">
                 <span className="filter-label">Cities:</span>
                 {item.filters.cities.map((city, idx) => (
-                  <span key={idx} className="filter-pill city">
-                    {city}
-                  </span>
+                  <span key={idx} className="filter-pill city">{city}</span>
                 ))}
               </div>
             )}
@@ -170,14 +221,10 @@ const WishlistItemCard = ({ item, onRemove }) => {
               <div className="filter-group">
                 <span className="filter-label">Plans:</span>
                 {item.filters.planNames.slice(0, 3).map((planName, idx) => (
-                  <span key={idx} className="filter-pill plan">
-                    {planName}
-                  </span>
+                  <span key={idx} className="filter-pill plan">{planName}</span>
                 ))}
                 {item.filters.planNames.length > 3 && (
-                  <span className="filter-pill more">
-                    +{item.filters.planNames.length - 3}
-                  </span>
+                  <span className="filter-pill more">+{item.filters.planNames.length - 3}</span>
                 )}
               </div>
             )}
@@ -190,26 +237,28 @@ const WishlistItemCard = ({ item, onRemove }) => {
             <span className="amount">₹{totalPrice.toLocaleString()}</span>
           </div>
 
-          <button
-            className="add-to-cart-btn"
-            onClick={() => {
-              // Extract unique zones and plans from variants
-              const zones = [...new Set(variants.map((v) => v.zone))];
-              const plans = [
-                ...new Set(variants.map((v) => v.plan).filter(Boolean)),
-              ];
+          <div className="card-actions">
+            {/* Add to Cart */}
+            <button
+              className={`wl-cart-btn ${cartAdded ? "wl-cart-btn--added" : ""}`}
+              onClick={handleAddToCart}
+              disabled={cartLoading || cartAdded}
+              title="Add to Cart"
+            >
+              {cartAdded
+                ? <><Check size={15} /> Added!</>
+                : <><ShoppingCart size={15} /> Add to Cart</>}
+            </button>
 
-              // Build query string with comma-separated values
-              const params = new URLSearchParams();
-              if (zones.length > 0) params.append("zone", zones.join(","));
-              if (plans.length > 0) params.append("plan", plans.join(","));
-
-              navigate(`/product/${product?._id}?${params.toString()}`);
-            }}
-          >
-            <ShoppingCart size={16} />
-            View
-          </button>
+            {/* View Product */}
+            <button
+              className="wl-view-btn"
+              onClick={() => navigate(buildViewUrl())}
+              title="View Product"
+            >
+              <ExternalLink size={15} /> View
+            </button>
+          </div>
         </div>
       </div>
     </div>

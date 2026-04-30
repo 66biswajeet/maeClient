@@ -11,8 +11,8 @@ export const getSiteSettings = () => api.get("/site-settings");
 export const getProducts = (params = {}) => api.get("/products", { params });
 
 // Wishlist API
-export const addToWishlist = (productId, zones = [], plans = []) =>
-  api.post("/wishlist", { productId, zones, plans });
+export const addToWishlist = (productId, zones = [], plans = [], cities = []) =>
+  api.post("/wishlist", { productId, zones, plans, cities });
 
 export const getWishlist = () => api.get("/wishlist");
 
@@ -30,3 +30,22 @@ export const setAuthToken = (token) => {
     delete api.defaults.headers.common["Authorization"];
   }
 };
+
+// Cart API
+export const addToCart = (payload) => api.post("/cart", payload);
+export const getCart = () => api.get("/cart");
+export const updateCartItem = (id, data) => api.patch(`/cart/${id}`, data);
+export const removeCartItem = (id) => api.delete(`/cart/${id}`);
+export const clearCart = () => api.delete("/cart");
+export const createOrder = (payload) => api.post("/orders", payload); // legacy – kept for reference
+
+// Booking API (customer-facing – replaces createOrder at checkout)
+export const createBooking = (payload) => api.post("/bookings/place", payload);
+
+// Customer Profile API (customer-protected)
+export const getMyProfile = () => api.get("/customers/me");
+export const updateMyProfile = (data) => api.patch("/customers/me", data);
+export const getMyOrders = (customerId) =>
+  api.get("/orders/my", { params: { customerId } });
+export const getMyBookings = (customerId) =>
+  api.get("/bookings", { params: { customer: customerId, limit: 50 } });

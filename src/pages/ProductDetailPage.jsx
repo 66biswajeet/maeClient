@@ -1,11 +1,169 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { X, MapPin, Package, Heart, Share2, Check } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
+import { X, MapPin, Package, Heart, Share2, Check, ShoppingCart, ChevronRight, Trash2 } from "lucide-react";
 import axios from "axios";
+import { addToCart, getCart, removeCartItem } from "../services/api";
 import { useWishlist } from "../hooks/useWishlist";
 import WishlistButton from "../components/WishlistButton";
 import ProductFilterSelector from "../components/ProductFilterSelector";
 import "./ProductDetailPage.css";
+
+/* ── tiny toast helper ──────────────────────────────────── */
+function Toast({ toasts, onClose }) {
+  if (!toasts.length) return null;
+  return (
+    <div className="pdp-toast-stack">
+      {toasts.map((t) => (
+        <div key={t.id} className={`pdp-toast pdp-toast--${t.type || "success"}`}>
+          <span className="pdp-toast__msg">{t.msg}</span>
+          {t.link && (
+            <Link to={t.link.href} className="pdp-toast__link">{t.link.label} →</Link>
+          )}
+          <button className="pdp-toast__close" onClick={() => onClose(t.id)}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── cart side panel ─────────────────────────────────────── */
+const fmt = (n) => "₹" + (Number(n) || 0).toLocaleString("en-IN");
+
+function CartItemCityBreakdown({ item }) {
+  const fs        = item.filterSnapshot || {};
+  const cities    = fs.cities || fs.citiesSelected || fs.cityList || [];
+  const zones     = fs.zones || [];
+  const plan      = fs.plans?.[0] || fs.plan || null;
+  const product   = item.productSnapshot || {};
+  const variants  = product.variants || [];
+
+  const hasCities = Array.isArray(cities) && cities.length > 0;
+  const unit      = Number(item.unitPrice) || 0;
+  const qty       = Number(item.quantity)  || 1;
+  const subtotal  = unit * qty;
+  const tax       = Math.round(subtotal * 0.18);
+  const total     = subtotal + tax;
+
+  const getCityPrice = (idx) => {
+    const zone = zones[idx];
+    if (!zone || !variants.length) return unit / (cities.length || 1);
+
+    const targetPlanId = (plan && typeof plan === "object") ? plan._id : plan;
+    const variant = variants.find((v) => {
+      const vPlanId = (v.plan && typeof v.plan === "object") ? v.plan._id : v.plan;
+      return (
+        v.zone === zone &&
+        vPlanId?.toString() === targetPlanId?.toString()
+      );
+    });
+
+    return variant ? (variant.salePrice || variant.price) : (unit / cities.length);
+  };
+
+  return (
+    <div className="cp-item__breakdown">
+      {plan && <div className="cp-item__plan">Plan: {typeof plan === "object" ? plan.name : plan}</div>}
+      {hasCities ? (
+        <div className="cp-item__cities">
+          {cities.map((c, i) => {
+            const name = typeof c === "string" ? c : (c.name || c.city || `City ${i+1}`);
+            const price = getCityPrice(i);
+            return (
+              <div key={i} className="cp-item__city-row">
+                <span><span className="cp-dot"/>  {name}</span>
+                <span>{fmt(price)}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="cp-item__city-row">
+          <span>Service × {qty}</span>
+          <span>{fmt(subtotal)}</span>
+        </div>
+      )}
+      <div className="cp-item__tax-row"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+      <div className="cp-item__tax-row"><span>GST (18%)</span><span>{fmt(tax)}</span></div>
+      <div className="cp-item__total-row"><span>Item Total</span><span>{fmt(total)}</span></div>
+    </div>
+  );
+}
+
+function CartPanel({ open, onClose, cartItems, onRemove, navigate }) {
+  const grandSubtotal = cartItems.reduce((s, it) => s + (it.unitPrice || 0) * (it.quantity || 1), 0);
+  const grandTax      = Math.round(grandSubtotal * 0.18);
+  const grandTotal    = grandSubtotal + grandTax;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`cp-backdrop ${open ? "cp-backdrop--open" : ""}`}
+        onClick={onClose}
+      />
+      {/* Panel */}
+      <div className={`cart-panel ${open ? "cart-panel--open" : ""}`}>
+        <div className="cp-header">
+          <div className="cp-header__title">
+            <ShoppingCart size={18} />
+            My Cart
+            <span className="cp-badge">{cartItems.length}</span>
+          </div>
+          <button className="cp-header__close" onClick={onClose}><X size={18}/></button>
+        </div>
+
+        <div className="cp-body">
+          {cartItems.length === 0 ? (
+            <div className="cp-empty">
+              <div className="cp-empty__icon">🛒</div>
+              <p>Your cart is empty</p>
+            </div>
+          ) : (
+            cartItems.map((item, idx) => (
+              <div key={item._id || idx} className="cp-item">
+                <div className="cp-item__header">
+                  <span className="cp-item__title">
+                    {item.productSnapshot?.title || item.title || "Service"}
+                  </span>
+                  <button
+                    className="cp-item__remove"
+                    title="Remove"
+                    onClick={() => onRemove(item._id)}
+                  >
+                    <Trash2 size={13}/>
+                  </button>
+                </div>
+                <CartItemCityBreakdown item={item} />
+              </div>
+            ))
+          )}
+        </div>
+
+        {cartItems.length > 0 && (
+          <div className="cp-footer">
+            <div className="cp-footer__summary">
+              <div className="cp-footer__row">
+                <span>Subtotal</span><span>{fmt(grandSubtotal)}</span>
+              </div>
+              <div className="cp-footer__row">
+                <span>GST (18%)</span><span>{fmt(grandTax)}</span>
+              </div>
+              <div className="cp-footer__row cp-footer__row--grand">
+                <span>Grand Total</span><span>{fmt(grandTotal)}</span>
+              </div>
+            </div>
+            <button
+              className="cp-footer__checkout"
+              onClick={() => { onClose(); navigate("/checkout"); }}
+            >
+              Proceed to Checkout <ChevronRight size={16}/>
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -17,6 +175,36 @@ const ProductDetailPage = () => {
   const [plans, setPlans] = useState([]);
   const [cities, setCities] = useState([]);
   const [zones, setZones] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+
+  // Cart panel
+  const [cartOpen,  setCartOpen]  = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+
+  // Toast stack
+  const [toasts, setToasts] = useState([]);
+  const addToast = (msg, type = "success", link = null) => {
+    const t = { id: Date.now(), msg, type, link };
+    setToasts((prev) => [...prev, t]);
+    setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== t.id)), 4500);
+  };
+  const removeToast = (id) => setToasts((prev) => prev.filter((x) => x.id !== id));
+
+  // Fetch cart for panel
+  const fetchCart = useCallback(async () => {
+    try {
+      const res = await getCart();
+      setCartItems(res.data.items || []);
+    } catch { setCartItems([]); }
+  }, []);
+
+  // Remove item from cart
+  const handleRemoveCartItem = async (itemId) => {
+    try {
+      await removeCartItem(itemId);
+      await fetchCart();
+    } catch (err) { console.error(err); }
+  };
 
   // Wishlist hook
   const { isInWishlist } = useWishlist();
@@ -264,6 +452,17 @@ const ProductDetailPage = () => {
 
   return (
     <div className="product-detail">
+      {/* Toast stack */}
+      <Toast toasts={toasts} onClose={removeToast} />
+
+      {/* Cart side panel */}
+      <CartPanel
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cartItems={cartItems}
+        onRemove={handleRemoveCartItem}
+        navigate={navigate}
+      />
       <div className="product-detail__breadcrumb">
         <button onClick={() => navigate(-1)} className="product-detail__back">
           ← Back
@@ -512,12 +711,50 @@ const ProductDetailPage = () => {
             {/* Quantity & Action Buttons */}
             <div className="product-detail__purchase">
               <div className="product-detail__quantity">
-                <button className="qty-btn">−</button>
-                <input type="number" value="1" readOnly />
-                <button className="qty-btn">+</button>
+                <button
+                  className="qty-btn"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                >
+                  −
+                </button>
+                <input type="number" value={quantity} readOnly />
+                <button
+                  className="qty-btn"
+                  onClick={() => setQuantity((q) => q + 1)}
+                >
+                  +
+                </button>
               </div>
-              <button className="product-detail__btn-add-to-cart">
-                Add to Cart
+              <button
+                className="product-detail__btn-add-to-cart"
+                onClick={async () => {
+                  try {
+                    const payload = {
+                      productId: product._id,
+                      productSnapshot: product,
+                      vendorSnapshot: product.vendor || null,
+                      filterSnapshot: {
+                        zones: selectedZones,
+                        plans: selectedPlanIds,
+                        cities: finalSelectedCities,
+                        filterHash: currentFilterHash,
+                        variantId: selectedVariant?._id || null,
+                      },
+                      quantity,
+                      unitPrice: displayPrice,
+                      currency: product.currency || "INR",
+                    };
+                    await addToCart(payload);
+                    addToast(`"${product.title}" added to cart!`, "success");
+                    await fetchCart();
+                    setCartOpen(true);
+                  } catch (err) {
+                    console.error(err);
+                    addToast(err?.response?.data?.message || "Failed to add to cart", "error");
+                  }
+                }}
+              >
+                <ShoppingCart size={15} /> Add to Cart
               </button>
             </div>
 
@@ -528,6 +765,17 @@ const ProductDetailPage = () => {
                 zones={selectedZones}
                 plans={selectedPlanIds}
                 cities={finalSelectedCities}
+                onWishlistToggle={(added) => {
+                  if (added) {
+                    addToast(
+                      "Added to wishlist!",
+                      "wish",
+                      { href: "/wishlist", label: "View Wishlist" }
+                    );
+                  } else {
+                    addToast("Removed from wishlist", "info");
+                  }
+                }}
               />
               <button className="product-detail__action-btn">
                 <Share2 size={18} /> Share
@@ -537,7 +785,7 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Filter Selector */}
-        <ProductFilterSelector
+        {/* <ProductFilterSelector
           zones={zones}
           plans={plans}
           cities={cities}
@@ -545,7 +793,7 @@ const ProductDetailPage = () => {
           initialPlans={selectedPlanIds}
           initialCities={selectedCities}
           onApplyFilters={handleApplyFilters}
-        />
+        /> */}
 
         {/* Description Section */}
         <div className="product-detail__description-full">

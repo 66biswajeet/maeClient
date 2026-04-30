@@ -10,7 +10,10 @@ import CategoryProductsPage from "./pages/CategoryProductsPage";
 import AllProductsPage from "./pages/AllProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import WishlistPage from "./pages/WishlistPage";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import AccountPage from "./pages/AccountPage";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 
 const Layout = ({ children, settings }) => (
@@ -132,9 +135,11 @@ function App() {
             path="/categories"
             element={<PlaceholderPage title="All Categories" />}
           />
-          <Route path="/cart" element={<PlaceholderPage title="Cart" />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/signin" element={<PlaceholderPage title="Sign In" />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route
             path="*"
             element={<PlaceholderPage title="Page Not Found" />}

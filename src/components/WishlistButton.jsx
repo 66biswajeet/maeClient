@@ -9,6 +9,7 @@ const WishlistButton = ({
   plans = [],
   cities = [],
   onToggle,
+  onWishlistToggle,
 }) => {
   const { addToWishlist, removeFromWishlist, isInWishlist, getWishlistItem } =
     useWishlist();
@@ -30,6 +31,7 @@ const WishlistButton = ({
         if (item) {
           await removeFromWishlist(item._id);
           setInWishlist(false);
+          onWishlistToggle?.(false);
         }
       } else {
         // Ensure zones, plans, and cities are arrays
@@ -49,6 +51,7 @@ const WishlistButton = ({
         );
         if (result.success) {
           setInWishlist(true);
+          onWishlistToggle?.(true);
         }
       }
       onToggle && onToggle(!inWishlist);

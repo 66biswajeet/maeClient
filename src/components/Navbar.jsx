@@ -116,21 +116,35 @@ const Navbar = ({ header }) => {
                 className="navbar__signin user-logged"
                 title={currentUser.name || currentUser.email}
               >
-                <div className="user-avatar">
+                <div
+                  className="user-avatar"
+                  id="navbar-profile-avatar"
+                  onClick={() => navigate("/account")}
+                  style={{ cursor: "pointer" }}
+                  role="link"
+                  aria-label="Go to My Account"
+                >
                   {(currentUser.name || currentUser.email || "")
                     .charAt(0)
                     .toUpperCase()}
                 </div>
-                <button
-                  className="logout-btn"
-                  onClick={() => {
-                    localStorage.removeItem("mae_token");
-                    localStorage.removeItem("mae_user");
-                    setCurrentUser(null);
-                  }}
-                >
-                  Logout
-                </button>
+                <div className="user-dropdown">
+                  <a href="/account" className="user-dropdown-item">
+                    <User size={14} />
+                    My Account
+                  </a>
+                  <button
+                    className="user-dropdown-item user-dropdown-logout"
+                    onClick={() => {
+                      localStorage.removeItem("mae_token");
+                      localStorage.removeItem("mae_user");
+                      setCurrentUser(null);
+                    }}
+                  >
+                    <span style={{ fontSize: 14 }}>↩</span>
+                    Logout
+                  </button>
+                </div>
               </div>
             ) : (
               <button
